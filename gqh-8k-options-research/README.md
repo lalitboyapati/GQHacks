@@ -1,5 +1,9 @@
 # 8-K Disclosure Advantage — Options Research
 
+> Picking this up for refinement? Read **[HANDOFF.md](./HANDOFF.md)** first:
+> current state, data contracts, deliberate choices not to "fix", bugs
+> already found, and the ranked list of open gaps.
+
 Does an SEC Form 8-K carry information the options market has not yet
 priced — and if so, can it be traded?
 
