@@ -1,0 +1,14 @@
+# Credentials
+.env
+
+# Cached API responses and generated results: large, regenerable, and
+# potentially subject to vendor redistribution terms.
+data/cache/
+data/results/
+
+# Python artifacts
+__pycache__/
+*.py[oc]
+.venv/
+.pytest_cache/
+*.egg-info
