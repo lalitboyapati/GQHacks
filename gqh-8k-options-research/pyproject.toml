@@ -1,0 +1,29 @@
+[project]
+name = "gqh-8k-options-research"
+version = "0.1.0"
+description = "Event-study and options backtest harness for SEC Form 8-K disclosures (executive changes, restructuring plans, and disclosure novelty)"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "pandas>=2.0.0",
+    "numpy>=1.26.0",
+    "scipy>=1.11.0",
+    "requests>=2.31.0",
+    "python-dotenv>=1.0.0",
+    "databento>=0.34.0",
+    "massive>=0.1.0",
+    "plotly>=5.20.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0.0"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["eightk"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
