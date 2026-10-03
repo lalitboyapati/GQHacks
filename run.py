@@ -23,6 +23,38 @@ INFRA_ROOT = HERE / "infrastructure"
 TRACKS_DIR = HERE / "tracks"
 BACKTEST_DIR = INFRA_ROOT / "backtest"
 
+
+def _infra_venv_python() -> Path | None:
+    if sys.platform == "win32":
+        candidate = INFRA_ROOT / ".venv" / "Scripts" / "python.exe"
+    else:
+        candidate = INFRA_ROOT / ".venv" / "bin" / "python"
+    return candidate if candidate.exists() else None
+
+
+def _reexec_in_infra_venv_if_needed() -> None:
+    """Plain ``python run.py`` often hits the conda base env; prefer infrastructure/.venv."""
+    if os.environ.get("GQH_SKIP_VENV_REEXEC") == "1":
+        return
+    venv_py = _infra_venv_python()
+    if venv_py is None:
+        return
+    try:
+        if Path(sys.executable).resolve() == venv_py.resolve():
+            return
+    except OSError:
+        return
+    # Only bounce when the active interpreter is missing project deps.
+    try:
+        import backtrader  # noqa: F401
+        import eightk  # noqa: F401
+    except ImportError:
+        os.environ["GQH_SKIP_VENV_REEXEC"] = "1"
+        os.execv(str(venv_py), [str(venv_py), str(HERE / "run.py"), *sys.argv[1:]])
+
+
+_reexec_in_infra_venv_if_needed()
+
 if str(INFRA_ROOT) not in sys.path:
     sys.path.insert(0, str(INFRA_ROOT))
 
@@ -146,7 +178,18 @@ def main() -> None:
     if engine == "event":
         if not args.track:
             raise SystemExit("--engine event requires --track")
-        _run_event_track(args.track, unknown)
+        # ``run.py … -- --events PATH`` makes argparse treat ``--events`` as the
+        # optional ``symbol`` positional; put flag-like leftovers back.
+        forwarded = list(unknown)
+        if args.symbol:
+            if str(args.symbol).startswith("-"):
+                forwarded.insert(0, str(args.symbol))
+            else:
+                raise SystemExit(
+                    f"Unexpected positional '{args.symbol}' for event engine; "
+                    "pass script flags after --engine event (e.g. --events …)"
+                )
+        _run_event_track(args.track, forwarded)
         return
     if unknown:
         raise SystemExit(f"Unrecognized arguments for backtrader engine: {unknown}")

@@ -3,6 +3,19 @@
 Multi-person workspace for **Form 8-K event strategies** with shared
 infrastructure and one folder per research track.
 
+## Where things landed
+
+- **`8kadv-test`** (merged to `main` via PR #3) now lives in the multi-track
+  layout: shared library at
+  [`infrastructure/eightk/`](./infrastructure/eightk/), research track at
+  [`tracks/disclosure_advantage/`](./tracks/disclosure_advantage/)
+  (`exec_put`, `efficiency_collar`, `novelty_shortvol`, `combo`).
+- **Other strategies** are under [`tracks/`](./tracks/) — one folder per 8-K
+  focus (e.g. [`item_202_results_ops`](./tracks/item_202_results_ops/) for
+  Item 2.02 synthetic calls/puts). Overview stubs such as
+  `item_502_officer_changes` and `item_205_restructuring` point at the live
+  eightk strategies above. See [`tracks/README.md`](./tracks/README.md).
+
 ## Layout
 
 ```
@@ -41,7 +54,7 @@ python run.py --list-tracks
 # Backtrader track (Item 2.02)
 python run.py --track item_202_results_ops
 
-# Event-study track (8-K disclosure advantage — from former gqh-8k-options-research)
+# Event-study track (8-K disclosure advantage — from former gqh-8k-options-research / 8kadv-test)
 python tracks/disclosure_advantage/scripts/fetch_events.py
 python tracks/disclosure_advantage/scripts/run_backtest.py
 # or:
