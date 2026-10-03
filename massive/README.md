@@ -22,6 +22,7 @@ We tested your API key (`ObDYzm2hPhBKbSYuislLV81QXO9hjNOD`). It is an **active D
 | **Tick-by-Tick Trades** | Every executed trade timestamp, price, volume, exchange | ✅ **Full Access** (15-min delayed stream) |
 | **Market Snapshots** | Day open, high, low, close, volume, prev close, change % | ✅ **Full Access** |
 | **Options Chains & Contracts** | Full option chains, strikes, expirations, contract types | ✅ **Full Access** |
+| **SEC Filings & 8-K Reports** | Material event 8-Ks, 10-Ks, 10-Qs, item codes & full text | ✅ **Full Access** |
 | **Server-Side Indicators** | Pre-computed SMA, EMA, RSI, MACD direct from API | ✅ **Full Access** |
 | **Market News** | Real-time news articles from Benzinga, Zacks, etc. | ✅ **Full Access** |
 | **Crypto & Forex** | Bitcoin, Ethereum, EUR/USD, and other pairs | ✅ **Full Access** |
@@ -93,6 +94,14 @@ sma = client.get_indicator("sma", "AAPL", timespan="day", window=20)
 
 # 4. Fetch financial news
 news = client.get_news("AAPL", limit=3)
+
+# 5. Fetch 8-K material event filings
+filings = client.get_8k_filings("AAPL", limit=5)
+for f in filings:
+    print(f"Date: {f['filing_date']} | Items: {f['items']} | Doc: {f['document_url']}")
+
+# 6. Read raw 8-K text for NLP / sentiment analysis
+doc_text = client.get_filing_content(filings[0]["document_url"])
 ```
 
 ### 3. Backtest with Backtrader & Massive

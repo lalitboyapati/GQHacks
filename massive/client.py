@@ -160,3 +160,85 @@ class MassiveClient:
         res = self._get(endpoint)
         results = res.get("results", [])
         return results[0] if results else {}
+
+    # -------------------------------------------------------------------------
+    # SEC Filings & 8-K Reports
+    # -------------------------------------------------------------------------
+    def get_sec_filings(self, form_type: str = "8-K", limit: int = 10) -> list[dict[str, Any]]:
+        """Fetch market-wide SEC filings filtered by form type (e.g. '8-K', '10-K', '10-Q') via Massive."""
+        endpoint = "/v1/reference/sec/filings"
+        params = {"type": form_type.upper(), "limit": limit}
+        res = self._get(endpoint, params=params)
+        return res.get("results", [])
+
+    def get_8k_filings(self, ticker: str, limit: int = 10) -> list[dict[str, Any]]:
+        """Fetch 8-K material event filings for a specific ticker.
+
+        Returns structured 8-K reports including:
+          - filing_date: date filed with the SEC
+          - report_date: period of report
+          - items: SEC 8-K items triggered (e.g. '2.02' for earnings release, '5.02' for CEO change)
+          - document_url: direct link to the SEC EDGAR filing document
+        """
+        headers = {"User-Agent": "GQHacksQuantTeam student@ufl.edu"}
+
+        # 1. Lookup company CIK
+        cik_resp = requests.get("https://www.sec.gov/files/company_tickers.json", headers=headers, timeout=10)
+        if cik_resp.status_code != 200:
+            raise RuntimeError(f"Failed to lookup CIK: HTTP {cik_resp.status_code}")
+
+        tickers_map = cik_resp.json()
+        target = ticker.upper()
+        match = next((v for v in tickers_map.values() if v["ticker"] == target), None)
+        if not match:
+            raise ValueError(f"Ticker {target} not found in SEC EDGAR registry")
+
+        cik_int = match["cik_str"]
+        cik_str = str(cik_int).zfill(10)
+
+        # 2. Fetch submissions
+        sub_url = f"https://data.sec.gov/submissions/CIK{cik_str}.json"
+        sub_resp = requests.get(sub_url, headers=headers, timeout=10)
+        if sub_resp.status_code != 200:
+            raise RuntimeError(f"Failed to fetch submissions for CIK {cik_str}: HTTP {sub_resp.status_code}")
+
+        recent = sub_resp.json().get("filings", {}).get("recent", {})
+        forms = recent.get("form", [])
+        filing_dates = recent.get("filingDate", [])
+        report_dates = recent.get("reportDate", [])
+        accessions = recent.get("accessionNumber", [])
+        primary_docs = recent.get("primaryDocument", [])
+        items_list = recent.get("items", [])
+
+        results = []
+        for i, form in enumerate(forms):
+            if form == "8-K":
+                acc = accessions[i]
+                acc_no_hyphen = acc.replace("-", "")
+                doc_name = primary_docs[i]
+                doc_url = f"https://www.sec.gov/Archives/edgar/data/{cik_int}/{acc_no_hyphen}/{doc_name}"
+                items_val = items_list[i] if i < len(items_list) else ""
+
+                results.append({
+                    "ticker": target,
+                    "form": "8-K",
+                    "filing_date": filing_dates[i] if i < len(filing_dates) else "",
+                    "report_date": report_dates[i] if i < len(report_dates) else "",
+                    "items": items_val,
+                    "accession_number": acc,
+                    "document_name": doc_name,
+                    "document_url": doc_url,
+                })
+                if len(results) >= limit:
+                    break
+
+        return results
+
+    def get_filing_content(self, document_url: str) -> str:
+        """Download raw HTML or text content of an SEC filing document."""
+        headers = {"User-Agent": "GQHacksQuantTeam student@ufl.edu"}
+        resp = requests.get(document_url, headers=headers, timeout=15)
+        if resp.status_code != 200:
+            raise RuntimeError(f"Failed to fetch filing document: HTTP {resp.status_code}")
+        return resp.text
+
