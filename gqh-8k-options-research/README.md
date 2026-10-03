@@ -1,5 +1,8 @@
 # 8-K Disclosure Advantage — Options Research
 
+> **Findings page:** https://claude.ai/artifact/2eF4e56avtmKgAV69iHyFx — charts and
+> readings from the 1,070-event set, with the limits stated up front.
+>
 > Picking this up for refinement? Read **[HANDOFF.md](./HANDOFF.md)** first:
 > current state, data contracts, deliberate choices not to "fix", bugs
 > already found, and the ranked list of open gaps.

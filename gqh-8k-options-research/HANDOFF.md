@@ -10,26 +10,16 @@ found and fixed in ways worth not regressing.
 ## 1. Where this lives
 
 - Repo: `github.com/lalitboyapati/GQHacks`
-- Branch: **`8kadv-test`** — 5 commits ahead of `origin/main`
+- Branch: **`8kadv-test`** — pushed, tracking `origin/8kadv-test`
+  (https://github.com/lalitboyapati/GQHacks/tree/8kadv-test)
 - Subproject: `gqh-8k-options-research/`
-- `main` is untouched.
+- `main` is untouched, locally and on the remote.
+- Findings page (charts + readings):
+  https://claude.ai/artifact/2eF4e56avtmKgAV69iHyFx
 
-**Nothing has been pushed to GitHub.** At time of writing these commits exist
-only in the local clone. Verify before assuming the branch is remote:
-
-```bash
-git ls-remote --heads origin 8kadv-test   # empty == not pushed
-```
-
-Commits, oldest first:
-
-| SHA | Subject |
-|---|---|
-| `0488565` | feat: add 8-K disclosure-advantage options research harness |
-| `9a8e8c2` | fix: only flag an 8-K disagreement when it is asserted, not denied |
-| `b3fb5ff` | data: add 1,054-event 8-K set across 86 smaller issuers, 2019-2026 |
-| `67e473d` | fix: strip trailing possessives from extracted officer names |
-| `d4e62c5` | docs: record measured event-set composition and the ~10-observation limit |
+Run `git log --oneline origin/main..HEAD` for the commit list. The sequence is:
+the harness, two classifier fixes (disagreement detection, name possessives),
+two committed event sets, the handoff doc, and the findings page.
 
 ---
 
@@ -59,9 +49,11 @@ novelty scoring, option pricing/structures, entry-exit simulation, statistics.
 synthetic data source.
 
 **Not yet run on real market data.** The event layer uses SEC EDGAR, which
-needs no key, and a real 1,054-event set is committed. The *trading* layer
-needs `MASSIVE_API_KEY` for prices and option chains. **No real P&L numbers
-exist yet.** Anyone claiming otherwise has not run it.
+needs no key, and two real event sets are committed (`universe_events.json`,
+1,054 events, Items 5.02/2.05/2.06; and `universe_events_wide.json`, 1,070
+events, adding 7.01/8.01). The *trading* layer needs `MASSIVE_API_KEY` for
+prices and option chains. **No real P&L numbers exist yet.** Anyone claiming
+otherwise has not run it.
 
 ```bash
 cd gqh-8k-options-research
@@ -211,24 +203,27 @@ the *incoming* officer's clawback clause, not the departure.
 
 ## 8. Measured event-set composition
 
-From the committed `data/events/universe_events.json` — 1,054 events, 86
-issuers, Items 5.02/2.05/2.06, 2019-01-02 → 2026-10-02.
+From `data/events/universe_events_wide.json` — 1,070 events, 86 issuers,
+Items 5.02/2.05/2.06/7.01/8.01, 2019-01-02 → 2026-10-02. (The narrower
+`universe_events.json` is also committed: 1,054 events, same window.)
 
 | | count | share |
 |---|---|---|
 | senior departures (CEO/CFO/President/COO) | 761 | 72% |
 | …clearing severity 0.35 | 481 | |
 | CEO departures | 350 | |
-| restructuring plans | 97 | 8% |
-| scoring as recycled disclosure | 201 | 19% |
+| restructuring plans | 113 | 11% |
+| …disclosing both a charge and savings | 12 | |
+| scoring as recycled disclosure | 204 | 19% |
 
-- **Session mix:** POST 75%, PRE 14%, RTH 11%. Favourable — most filings give
-  a clean next-session entry.
+- **Session mix:** POST 800 (75%), PRE 147 (14%), RTH 123 (11%). Favourable —
+  89% give a clean next-session entry.
 - **Forced exits are rare:** 15 (1.5%) admit cause/investigation, 7 (0.7%) an
   actual disagreement. Successor named in 64%; 15% framed as retirement.
 - **Severity:** median 0.32, max 0.82; only 20 events exceed 0.60.
-- **Filing lag:** 21% filed same day as the event reported; 45% three or more
-  days later.
+- **Filing lag:** 21% filed the same day as the event reported; **52%** three
+  or more days later. (An earlier commit message said 45% — that was an
+  arithmetic slip; 52% is correct.)
 
 ---
 
@@ -236,25 +231,30 @@ issuers, Items 5.02/2.05/2.06, 2019-01-02 → 2026-10-02.
 
 Ordered by how much they limit the conclusions.
 
-1. **The cost-now/savings-later test rests on ~10 observations.** Of 97
-   plans, 66 disclose a charge, 13 disclose annualized savings, **10
-   disclose both**. Idea 1's central mismatch is not measurable at
-   statistical scale on this universe. Options: widen the universe; extend
-   the window pre-2019; fall back to charge-size and horizon as the signal;
-   or pull savings from the subsequent 10-Q/10-K MD&A rather than the 8-K.
-   **Do not read a mean over ten trades as evidence.**
+1. **The cost-now/savings-later test rests on 12 observations.** Of 113
+   plans, 73 disclose a charge, 17 disclose annualized savings, **12
+   disclose both**. Not measurable at statistical scale on this universe.
+   **Do not read a mean over twelve trades as evidence.** See 2 and 2b below
+   for what has already been tried and the reframing that looks better.
 
-2. **Unfinished: the wider plan sweep.** A fetch including Items 7.01/8.01
-   (restructurings announced under Reg FD / Other Events) was launched and
-   cancelled at ~17/101 tickers. Finish it — it is the cheapest fix for gap
-   1:
-   ```bash
-   python scripts/fetch_events.py --universe default --start 2019-01-01 \
-     --items 5.02,2.05,2.06,7.01,8.01 --out data/events/universe_events_wide.json
-   ```
-   ~30 min first run, then fully cached. Note `trust_tables` is only set for
-   filings actually filed under 2.05/2.06, so 7.01/8.01 money extraction is
-   intentionally conservative — review whether that is too strict.
+2. **DONE — the wider plan sweep did not fix gap 1.** The Items 7.01/8.01
+   sweep has been run and committed as `data/events/universe_events_wide.json`
+   (1,070 events). Plan filings rose 97 → 113 and plans disclosing both a
+   charge and savings rose **10 → 12**. Companies do not put savings figures
+   in 8-Ks and no item-code widening changes that. Remaining routes: extend
+   the window before 2019, or parse the following 10-Q/10-K MD&A where
+   savings against restructuring charges are actually quantified.
+
+   Note `trust_tables` is only set for filings actually filed under
+   2.05/2.06, so 7.01/8.01 money extraction stays conservative — worth
+   reviewing whether that is too strict.
+
+2b. **The premise of idea 2 is not supported by the filings.** Of the 12
+   measurable plans, **10 claim payback inside one year** (median 4 months).
+   Only RH (7.5y) and Wayfair (1.6y) disclose the cost-now/savings-later
+   asymmetry the collar was designed for. The more promising inversion:
+   test whether *implausibly fast* promised paybacks are the tradable
+   signal. This reframing has not been implemented.
 
 3. **Novelty ignores news.** Prior-coverage evidence is the strongest of its
    four signals and requires `MASSIVE_API_KEY`. Currently scored from filing
