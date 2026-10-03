@@ -68,9 +68,21 @@ import plotly.graph_objects as go
 import plotly.io as pio
 from plotly.subplots import make_subplots
 from datetime import datetime, timedelta
+import matplotlib.pyplot as plt
+from IPython.display import display, HTML
 
-# Configure Plotly to render natively in VS Code / Jupyter without requiring external mime parsers
-pio.renderers.default = "notebook_connected"
+# Configure Plotly to render natively in VS Code / Jupyter
+try:
+    pio.renderers.default = "vscode"
+except Exception:
+    pio.renderers.default = "notebook"
+
+def render_plotly(fig):
+    \"\"\"Render Plotly figure with inline script embedding so it never renders blank in VS Code.\"\"\"
+    try:
+        display(HTML(fig.to_html(include_plotlyjs='inline', full_html=False)))
+    except Exception:
+        fig.show()
 
 # Ensure root modules are importable
 project_root = Path(os.getcwd()).parent if "notebooks" in os.getcwd() else Path(os.getcwd())
@@ -148,7 +160,7 @@ fig.update_layout(
     template="plotly_dark",
     height=450
 )
-fig.show()""")
+render_plotly(fig)""")
 
 # Cell 5: Black-Scholes Options Pricing Engine
 add_md("""## 3. Black-Scholes Options Pricing & Greeks Engine
@@ -268,7 +280,7 @@ fig_roi.update_layout(
     template="plotly_dark",
     height=500
 )
-fig_roi.show()""")
+render_plotly(fig_roi)""")
 
 # Cell 7: Dollar P&L vs ROI Trade-off
 add_md("""## 5. Absolute Dollar Gain vs. Capital Risk Analysis
@@ -451,7 +463,52 @@ fig_summary.update_layout(
     barmode="group",
     showlegend=True
 )
-fig_summary.show()""")
+
+# 1. Interactive Plotly display (inline script embeds natively in VS Code)
+render_plotly(fig_summary)
+
+# 2. Native Matplotlib Visualization (100% reliable rendering in any notebook kernel)
+fig_mpl, (ax1, ax2) = plt.subplots(2, 1, figsize=(14, 10))
+fig_mpl.patch.set_facecolor('#1e1e1e')
+for ax in (ax1, ax2):
+    ax.set_facecolor('#1e1e1e')
+    ax.tick_params(colors='white')
+    ax.xaxis.label.set_color('white')
+    ax.yaxis.label.set_color('white')
+    ax.title.set_color('white')
+    for spine in ax.spines.values():
+        spine.set_color('#444444')
+
+x = np.arange(len(df_bt))
+w_bar = 0.35
+
+# Subplot 1: Stock Price Drops
+ax1.bar(x - w_bar/2, df_bt["ret5"], w_bar, label="5-Day Return (%)", color="#ef4444")
+ax1.bar(x + w_bar/2, df_bt["max_drop"], w_bar, label="Max Intraday Drop (%)", color="#991b1b")
+ax1.set_title("5-Day Stock Price Reaction & Max Drop Post 8-K Filing", fontsize=13, fontweight="bold")
+ax1.set_ylabel("Underlying Return (%)")
+ax1.set_xticks(x)
+ax1.set_xticklabels(df_bt["ticker"], fontsize=10, fontweight="bold")
+ax1.axhline(0, color="gray", linestyle="--", alpha=0.7)
+ax1.legend(facecolor='#2d2d2d', edgecolor='gray', labelcolor='white')
+ax1.grid(True, linestyle=":", alpha=0.3, color='gray')
+
+# Subplot 2: Put Strategy ROI by Strike Tier
+w = 0.20
+ax2.bar(x - 1.5*w, df_bt["roi_itm"], w, label="ITM (+10% Strike)", color="#38bdf8")
+ax2.bar(x - 0.5*w, df_bt["roi_atm"], w, label="ATM (100% Strike)", color="#fbbf24")
+ax2.bar(x + 0.5*w, df_bt["roi_otm5"], w, label="5% OTM (95% Strike)", color="#fb923c")
+ax2.bar(x + 1.5*w, df_bt["roi_otm10"], w, label="10% OTM (90% Strike)", color="#4ade80")
+ax2.set_title("Put Option Strategy ROI (%) by Strike Selection Across All 10 Events", fontsize=13, fontweight="bold")
+ax2.set_ylabel("ROI on Capital (%)")
+ax2.set_xticks(x)
+ax2.set_xticklabels(df_bt["ticker"], fontsize=10, fontweight="bold")
+ax2.axhline(0, color="gray", linestyle="--", alpha=0.7)
+ax2.legend(facecolor='#2d2d2d', edgecolor='gray', labelcolor='white')
+ax2.grid(True, linestyle=":", alpha=0.3, color='gray')
+
+plt.tight_layout()
+plt.show()""")
 
 # Cell 12: Aggregate Quantitative Metrics
 add_md("""## 10. Quantitative Verdict: Strategy Statistics & Exposure Testing
