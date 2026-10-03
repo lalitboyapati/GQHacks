@@ -28,22 +28,41 @@ logger = get_logger("massive_disruptions")
 _DISRUPTION_RE = re.compile(
     r"""
     \b(
-        (?:facility|plant|refinery|mill|warehouse|factory|mine|terminal|pipeline|smelter|foundry)
-        .{0,60}?
-        (?:fire|explosion|blast|outage|shutdown|shut\s*down|destroyed|damaged|idled)
-      | (?:fire|explosion|blast|outage|shutdown|shut\s*down)
-        .{0,60}?
-        (?:facility|plant|refinery|mill|warehouse|factory|mine|terminal|pipeline|smelter|foundry|operations?)
+        (?:facility|plant|refinery|mill|warehouse|factory|mine|terminal|pipeline|smelter|foundry|complex|unit)
+        .{0,80}?
+        (?:fire|explosion|blast|outage|shutdown|shut\s*down|destroyed|damaged|idled|incident|hurricane|flood|freeze|storm)
+      | (?:fire|explosion|blast|outage|shutdown|shut\s*down|incident)
+        .{0,80}?
+        (?:facility|plant|refinery|mill|warehouse|factory|mine|terminal|pipeline|smelter|foundry|operations?|complex)
       | (?:industrial|warehouse|plant|mill|refinery)\s+fire
       | fire\s+at\s+the\s+(?:company|corporation|issuer)'?s?
       | explosion\s+at\s+the\s+(?:company|corporation|issuer)'?s?
-      | force\s+majeure.{0,60}?(?:facility|plant|refinery|mill|mine|operations|production)
-      | (?:facility|plant|refinery|mill|mine|operations|production).{0,60}?force\s+majeure
-      | temporary\s+(?:suspension|halt|closure|shutdown)
-      | (?:operations?|production)\s+(?:suspended|halted|idled|curtailed)
+      | (?:incident|accident)\s+at\s+(?:the\s+)?(?:company'?s\s+)?(?:facility|plant|refinery|mill|mine|terminal)
+      | force\s+majeure.{0,80}?(?:facility|plant|refinery|mill|mine|operations|production)
+      | (?:facility|plant|refinery|mill|mine|operations|production).{0,80}?force\s+majeure
+      | (?:cease|ceasing|ceased)\s+operations?\s+at
+      | (?:permanently|indefinitely)\s+(?:close|closing|closed|idle|idling)\s
+      | (?:operations?|production)\s+(?:suspended|halted|idled|curtailed|interrupted)
       | power\s+outage
       | gas\s+leak
       | chemical\s+(?:release|spill|leak)
+      | (?:refinery|mill|plant)\s+(?:outage|upset|turnaround).{0,40}?(?:unplanned|forced|emergency)
+      | unplanned\s+(?:outage|shutdown|downtime)
+    )\b
+    """,
+    re.IGNORECASE | re.VERBOSE,
+)
+
+# Employee-benefit / blackout trading 8-Ks match "temporary suspension" but are not physical.
+_FALSE_POSITIVE_RE = re.compile(
+    r"""
+    \b(
+        item\s*5\.04
+      | temporary\s+suspension\s+of\s+trading
+      | employee\s+benefit\s+plan
+      | registrant's\s+employee\s+benefit
+      | blackout\s+period
+      | equity\s+compensation
     )\b
     """,
     re.IGNORECASE | re.VERBOSE,
@@ -112,6 +131,8 @@ class DisruptionEvent:
 def is_disruption_text(text: str | None) -> bool:
     """Return True if free text looks like a physical facility disruption."""
     if not text:
+        return False
+    if _FALSE_POSITIVE_RE.search(text):
         return False
     return bool(_DISRUPTION_RE.search(text))
 

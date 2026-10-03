@@ -1,7 +1,14 @@
 {
+  "account balances with holdings, in": null,
+  "acres of real property, in": null,
   "addition, the company will incur costs to implement": null,
   "addition, there can be no assurance that other": null,
   "alliance refinery, belle chasse, la": null,
+  "alternatives for participants, in": null,
+  "and participants' investment, in": null,
+  "are expected to result, in": null,
+  "as presented, in": null,
+  "as they may be amended, or": null,
   "barry, united kingdom. - additional corporate": null,
   "belle chasse, la": {
     "display_name": "Belle Chasse, Plaquemines Parish, Louisiana, 70037, United States",
@@ -10,10 +17,68 @@
     "lon": -90.0140042,
     "query": "Belle Chasse, LA"
   },
+  "by reference. the information, in": null,
+  "cologne, germany": {
+    "display_name": "K\u00f6ln, Nordrhein-Westfalen, Deutschland",
+    "importance": 0.7583028574734825,
+    "lat": 50.938361,
+    "lon": 6.959974,
+    "query": "Cologne, Germany"
+  },
+  "credited to their plan account, in": null,
+  "deposit., in": {
+    "display_name": "BBMP Dry Waste Collection Deposit, Hennur Bagalur Road, Arkavathy Layout 20th Block, Geddalahalli, K Narayanapura, Bengaluru East City Corporation, Bengaluru, Bangalore East, Bengaluru Urban, Karnataka, 560043, India",
+    "importance": 7.094453345536e-05,
+    "lat": 13.0426427,
+    "lon": 77.6417929,
+    "query": "deposit., IN"
+  },
+  "facility is expected to result, in": null,
   "factors previously set forth, in": null,
   "general incorporation language, in": null,
+  "given that the company is, in": null,
   "incorporated by reference, in": null,
+  "individually, or": null,
+  "is expected to take place, in": null,
+  "is subject to the satisfaction, or": null,
+  "kaiserslautern, germany": {
+    "display_name": "Kaiserslautern, Rheinland-Pfalz, Deutschland",
+    "importance": 0.6209043208655481,
+    "lat": 49.4432174,
+    "lon": 7.7689951,
+    "query": "Kaiserslautern, Germany"
+  },
+  "lanaken, belgium": {
+    "display_name": "Lanaken, Tongeren, Limburg, Vlaanderen, Belgi\u00eb / Belgique / Belgien",
+    "importance": 0.4823910171213245,
+    "lat": 50.8892784,
+    "lon": 5.6513208,
+    "query": "Lanaken, Belgium"
+  },
+  "mechelen, belgium": {
+    "display_name": "Mechelen, Antwerpen, Vlaanderen, Belgi\u00eb / Belgique / Belgien",
+    "importance": 0.6209991948975233,
+    "lat": 51.0281381,
+    "lon": 4.4803453,
+    "query": "Mechelen, Belgium"
+  },
+  "million pounds of caustic soda, in": null,
+  "million pounds, in": null,
+  "million, in": {
+    "display_name": "Million Dollar Nest, Anjuna, Verla, Bardez, North Goa, Goa, India",
+    "importance": 0.08005453345540547,
+    "lat": 15.5864252,
+    "lon": 73.7726337,
+    "query": "million, IN"
+  },
+  "non-cash charge to be recorded, in": null,
+  "noncash charge to be recorded, in": null,
+  "of the company's business, in": null,
+  "of their plan account balance, in": null,
+  "of their total account balance., in": null,
   "part i, item": null,
+  "participants who tender some, or": null,
+  "price adjustments as described, in": null,
   "schkopau, germany": {
     "display_name": "Schkopau, Saalekreis, Sachsen-Anhalt, 06258, Deutschland",
     "importance": 0.44944568143391417,
@@ -31,7 +96,30 @@
     "query": "Sinton, TX"
   },
   "the following risk factor, in": null,
+  "the information contained, in": null,
+  "the information, in": {
+    "display_name": "Office Of The Sub-Divisional Information Culture Officer, Newtown Road, Deshbandhu Para, Islampur, Uttar Dinajpur, West Bengal, 733202, India",
+    "importance": 5.0061036087541274e-05,
+    "lat": 26.2542429,
+    "lon": 88.1865906,
+    "query": "the information, IN"
+  },
   "the slides to be presented, in": null,
+  "the weak demand, in": null,
+  "this report is material or complete, or": null,
+  "to the conditions set forth, in": null,
+  "to the participant's account, in": null,
   "total, future cash payments related to severance": null,
-  "total, these costs are expected to be in the": null
+  "total, these costs are expected to be in the": null,
+  "uentrop, germany": {
+    "display_name": "Uentrop, Hamm, Nordrhein-Westfalen, 59071, Deutschland",
+    "importance": 0.311877314681546,
+    "lat": 51.6926159,
+    "lon": 7.940585,
+    "query": "Uentrop, Germany"
+  },
+  "units at the company's site, in": null,
+  "units at the pernis facility., in": null,
+  "was involved, in": null,
+  "works councils and unions., in": null
 }
