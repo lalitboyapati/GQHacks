@@ -30,6 +30,11 @@ venv/
 *_report*.html
 **/*_report*.html
 
+# Event-study caches / trade dumps (committed event JSON is OK)
+tracks/**/data/cache/
+tracks/**/data/results/
+infrastructure/data/
+
 # OS metadata
 .DS_Store
 Thumbs.db

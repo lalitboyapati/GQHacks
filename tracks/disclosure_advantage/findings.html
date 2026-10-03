@@ -1,0 +1,1027 @@
+<title>8-K Disclosure Advantage</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+
+<style>
+  /* ---- tokens: complete light palette on bare :root ---- */
+  :root {
+    color-scheme: light;
+
+    --ground:        #f4f5f7;
+    --surface:       #ffffff;
+    --surface-sunk:  #eceef2;
+    --rule:          #d9dde4;
+    --rule-strong:   #b9c0cb;
+
+    --ink:           #151c27;
+    --ink-2:         #4e5968;
+    --ink-3:         #767f8e;
+
+    --accent:        #1d5b7e;
+    --accent-soft:   #e6eff4;
+
+    /* data marks — validated against #ffffff (light) / #161b24 (dark) */
+    --mark-1:        #2a78d6;   /* primary magnitude */
+    --mark-2:        #eb6834;   /* the weak / forced case */
+    --mark-3:        #1baf7a;
+    --crit:          #d03b3b;   /* the limiting finding */
+    --good:          #0ca30c;
+
+    /* ordinal ramp, single hue, monotone L */
+    --step-1:        #86b6ef;
+    --step-2:        #5598e7;
+    --step-3:        #2a78d6;
+    --step-4:        #184f95;
+
+    --grid:          #e8ebf0;
+
+    --display: "Newsreader", ui-serif, Georgia, serif;
+    --body: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --ground:       #10141b;
+      --surface:      #161b24;
+      --surface-sunk: #1d232e;
+      --rule:         #2a3240;
+      --rule-strong:  #3d4858;
+      --ink:          #e6eaf1;
+      --ink-2:        #a3aebd;
+      --ink-3:        #7c8796;
+      --accent:       #6fb3d6;
+      --accent-soft:  #1a2a35;
+      --mark-1:       #3987e5;
+      --mark-2:       #d95926;
+      --mark-3:       #199e70;
+      --crit:         #e05a5a;
+      --good:         #2fbd2f;
+      --step-1:       #184f95;
+      --step-2:       #256abf;
+      --step-3:       #3987e5;
+      --step-4:       #86b6ef;
+      --grid:         #262e3a;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --ground:       #10141b;
+    --surface:      #161b24;
+    --surface-sunk: #1d232e;
+    --rule:         #2a3240;
+    --rule-strong:  #3d4858;
+    --ink:          #e6eaf1;
+    --ink-2:        #a3aebd;
+    --ink-3:        #7c8796;
+    --accent:       #6fb3d6;
+    --accent-soft:  #1a2a35;
+    --mark-1:       #3987e5;
+    --mark-2:       #d95926;
+    --mark-3:       #199e70;
+    --crit:         #e05a5a;
+    --good:         #2fbd2f;
+    --step-1:       #184f95;
+    --step-2:       #256abf;
+    --step-3:       #3987e5;
+    --step-4:       #86b6ef;
+    --grid:         #262e3a;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 960px;
+    margin: 0 auto;
+    padding-inline: 20px;
+    padding-block: 0 72px;
+  }
+
+  /* ---------- masthead ---------- */
+  .masthead {
+    padding-block: 56px 28px;
+    border-bottom: 2px solid var(--ink);
+  }
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 18px;
+  }
+  h1 {
+    font-family: var(--display);
+    font-weight: 500;
+    font-size: clamp(2.1rem, 6vw, 3.4rem);
+    line-height: 1.08;
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+    margin: 0 0 16px;
+  }
+  .standfirst {
+    font-family: var(--display);
+    font-size: clamp(1.05rem, 2.4vw, 1.3rem);
+    line-height: 1.5;
+    color: var(--ink-2);
+    max-width: 62ch;
+    margin: 0;
+  }
+
+  /* filing-header style provenance block */
+  .provenance {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    margin-block: 32px 0;
+  }
+  .provenance div {
+    background: var(--surface);
+    padding: 12px 14px;
+  }
+  .provenance dt {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin: 0 0 4px;
+  }
+  .provenance dd {
+    font-family: var(--mono);
+    font-size: 13.5px;
+    font-weight: 500;
+    margin: 0;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ---------- status band ---------- */
+  .status {
+    margin-block: 40px;
+    border: 1px solid var(--rule-strong);
+    border-left: 4px solid var(--mark-2);
+    background: var(--surface);
+    padding: 20px 22px;
+  }
+  .status h2 {
+    font-family: var(--body);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--mark-2);
+    margin: 0 0 10px;
+  }
+  .status p { margin: 0 0 10px; max-width: 70ch; }
+  .status p:last-child { margin-bottom: 0; }
+
+  /* ---------- sections ---------- */
+  section { margin-block: 56px 0; }
+  .sec-head {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 10px;
+    margin-bottom: 22px;
+  }
+  .sec-num {
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--accent);
+    letter-spacing: 0.08em;
+    flex: none;
+  }
+  h2.sec-title {
+    font-family: var(--display);
+    font-weight: 500;
+    font-size: clamp(1.4rem, 3.4vw, 1.95rem);
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+    margin: 0;
+  }
+  h3 {
+    font-family: var(--body);
+    font-size: 15px;
+    font-weight: 600;
+    margin: 0 0 8px;
+  }
+  p { max-width: 70ch; }
+  .lede { font-size: 17px; color: var(--ink-2); max-width: 66ch; }
+
+  /* ---------- the three ideas ---------- */
+  .ideas {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 16px;
+  }
+  .idea {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .idea-id {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--accent);
+    letter-spacing: 0.02em;
+  }
+  .idea-q {
+    font-family: var(--display);
+    font-size: 1.05rem;
+    line-height: 1.35;
+    margin: 0;
+  }
+  .idea-struct {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--ink-2);
+    line-height: 1.5;
+    padding: 8px 10px;
+    background: var(--surface-sunk);
+  }
+  .idea-n {
+    margin-top: auto;
+    font-family: var(--mono);
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-2);
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    border-top: 1px solid var(--rule);
+    padding-top: 10px;
+  }
+  .idea-n b { color: var(--ink); font-weight: 600; }
+  .pill {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 3px 7px;
+    border: 1px solid currentColor;
+    align-self: flex-start;
+  }
+  .pill.ok    { color: var(--good); }
+  .pill.thin  { color: var(--crit); }
+  .pill.mid   { color: var(--mark-2); }
+
+  /* ---------- charts ---------- */
+  figure {
+    margin: 0;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    padding: 18px 18px 14px;
+  }
+  figcaption {
+    font-family: var(--body);
+    font-size: 13px;
+    color: var(--ink-2);
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid var(--rule);
+    max-width: none;
+  }
+  figcaption b { color: var(--ink); font-weight: 600; }
+  .chart-title {
+    font-family: var(--body);
+    font-size: 13.5px;
+    font-weight: 600;
+    margin: 0 0 2px;
+  }
+  .chart-sub {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--ink-3);
+    margin: 0 0 14px;
+  }
+  .chart-scroll { overflow-x: auto; }
+  svg { display: block; max-width: 100%; height: auto; }
+  svg text { font-family: var(--mono); fill: var(--ink-2); }
+  .v-label { fill: var(--ink); font-weight: 600; }
+
+  .two-up {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 16px;
+  }
+
+  /* ---------- key-number callout ---------- */
+  .callout {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-top: 3px solid var(--crit);
+    padding: 22px;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 22px;
+    align-items: start;
+  }
+  .callout .big {
+    font-family: var(--display);
+    font-size: clamp(3rem, 9vw, 4.6rem);
+    line-height: 0.9;
+    font-weight: 500;
+    color: var(--crit);
+    font-variant-numeric: tabular-nums;
+  }
+  .callout .big small {
+    display: block;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin-top: 8px;
+    font-weight: 400;
+  }
+  .callout p { margin: 0 0 10px; }
+  .callout p:last-child { margin-bottom: 0; }
+  @media (max-width: 520px) {
+    .callout { grid-template-columns: 1fr; gap: 12px; }
+  }
+
+  /* ---------- flag table ---------- */
+  .tbl-scroll { overflow-x: auto; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+  }
+  caption {
+    text-align: left;
+    font-family: var(--body);
+    font-size: 13.5px;
+    font-weight: 600;
+    padding-bottom: 10px;
+  }
+  th, td {
+    text-align: left;
+    padding: 9px 12px;
+    border-bottom: 1px solid var(--rule);
+  }
+  th {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    font-weight: 500;
+    border-bottom: 1px solid var(--rule-strong);
+  }
+  td.num {
+    font-family: var(--mono);
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+    white-space: nowrap;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+
+  /* ---------- code ---------- */
+  pre {
+    background: var(--surface-sunk);
+    border: 1px solid var(--rule);
+    padding: 14px 16px;
+    overflow-x: auto;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    line-height: 1.65;
+    margin: 0;
+  }
+  pre .c { color: var(--ink-3); }
+  code {
+    font-family: var(--mono);
+    font-size: 0.9em;
+    background: var(--surface-sunk);
+    padding: 1px 5px;
+    border: 1px solid var(--rule);
+  }
+
+  /* ---------- ordered gap list ---------- */
+  ol.gaps { counter-reset: g; list-style: none; padding: 0; margin: 0; display: grid; gap: 14px; }
+  ol.gaps li {
+    counter-increment: g;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 14px;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    padding: 14px 16px;
+  }
+  ol.gaps li::before {
+    content: counter(g);
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent);
+    background: var(--accent-soft);
+    width: 26px; height: 26px;
+    display: grid; place-items: center;
+  }
+  ol.gaps p { margin: 4px 0 0; font-size: 14px; color: var(--ink-2); }
+
+  ul.plain { padding-left: 20px; }
+  ul.plain li { margin-bottom: 7px; }
+
+  footer {
+    margin-top: 64px;
+    padding-top: 20px;
+    border-top: 2px solid var(--ink);
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--ink-3);
+    line-height: 1.8;
+  }
+  a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+  a:focus-visible, [tabindex]:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <p class="eyebrow">Event study · branch 8kadv-test</p>
+    <h1>Can you trade an 8-K before the market reads it?</h1>
+    <p class="standfirst">Three options strategies tested against SEC Form 8-K disclosures at
+      smaller, thinly covered issuers — executive departures, restructuring plans, and filings
+      that only re-announce what was already public. This is what the event data says before
+      a single trade is priced.</p>
+
+    <dl class="provenance">
+      <div><dt>Events</dt><dd>1,070</dd></div>
+      <div><dt>Issuers</dt><dd>86</dd></div>
+      <div><dt>Window</dt><dd>2019-01-02 → 2026-10-02</dd></div>
+      <div><dt>Items</dt><dd>5.02 · 2.05 · 2.06 · 7.01 · 8.01</dd></div>
+      <div><dt>Source</dt><dd>SEC EDGAR</dd></div>
+    </dl>
+  </header>
+
+  <div class="status">
+    <h2>Read this first — no P&amp;L exists yet</h2>
+    <p>The event layer is complete and runs on real SEC data: 1,070 filings, classified,
+      timestamped to the second, and committed so every judgement can be audited by hand.
+      The <em>trading</em> layer is built and tested but has not been run on market data —
+      it needs a Massive API key for prices and option chains.</p>
+    <p>So everything below is a finding about <strong>the opportunity set</strong>: how many
+      tradable events exist, when they land, and which of the three ideas has enough
+      observations to support a conclusion. No return, hit rate, or Sharpe figure appears on
+      this page, because none has been computed. Two of these findings already change what
+      you should expect from the strategies.</p>
+  </div>
+
+  <section>
+    <div class="sec-head">
+      <span class="sec-num">01</span>
+      <h2 class="sec-title">The three ideas, and what the data gives each one</h2>
+    </div>
+    <p class="lede">Each idea is paired with the structure a desk would actually use, not a
+      generic long-option bet. The event counts are what survived classification.</p>
+
+    <div class="ideas">
+      <div class="idea">
+        <span class="idea-id">exec_put</span>
+        <p class="idea-q">A CEO or CFO walks out. If you saw the 8-K and acted, did you make money?</p>
+        <p class="idea-struct">long ~35-delta put<br>21–60 DTE</p>
+        <span class="pill ok">sample sufficient</span>
+        <div class="idea-n"><span>senior departures</span><b>761</b></div>
+      </div>
+
+      <div class="idea">
+        <span class="idea-id">efficiency_collar</span>
+        <p class="idea-q">An efficiency plan books big costs now and promises savings years out. Does the market take time to price that?</p>
+        <p class="idea-struct">long stock<br>+ long 25Δ put<br>− short 25Δ call</p>
+        <span class="pill thin">premise not supported</span>
+        <div class="idea-n"><span>plans w/ both figures</span><b>12</b></div>
+      </div>
+
+      <div class="idea">
+        <span class="idea-id">novelty_shortvol</span>
+        <p class="idea-q">Is this actually news, or the same announcement again? Do options stay expensive anyway?</p>
+        <p class="idea-struct">short 20Δ strangle</p>
+        <span class="pill ok">sample sufficient</span>
+        <div class="idea-n"><span>recycled filings</span><b>204</b></div>
+      </div>
+
+      <div class="idea">
+        <span class="idea-id">combo</span>
+        <p class="idea-q">Ideas 1 and 2 together: route each plan filing by whether it actually revealed anything.</p>
+        <p class="idea-struct">novel → collar<br>repeat → short strangle</p>
+        <span class="pill mid">inherits idea 2's limit</span>
+        <div class="idea-n"><span>plan filings</span><b>113</b></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <span class="sec-num">02</span>
+      <h2 class="sec-title">Timing works in your favour — 89% of filings land outside market hours</h2>
+    </div>
+    <p class="lede">A filing accepted after the close or before the open gives a clean,
+      unambiguous entry at the next session's open. Only a filing that lands mid-session
+      forces the pessimistic assumption: entry at that day's close, because daily bars cannot
+      honestly support a fill moments after it hit.</p>
+
+    <figure>
+      <p class="chart-title">When 8-K filings are accepted, by trading session</p>
+      <p class="chart-sub">n = 1,070 · acceptance timestamps converted UTC → America/New_York</p>
+      <div class="chart-scroll" id="c-session"></div>
+      <figcaption><b>800 filings (75%) arrive after the 16:00 ET close</b> and 147 (14%)
+        pre-market — both tradable at the next open. Just 123 (11%) land intraday, where the
+        backtest is forced to enter at the close and the measurable edge is weakest.</figcaption>
+    </figure>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <span class="sec-num">03</span>
+      <h2 class="sec-title">But the gap itself is not capturable</h2>
+    </div>
+    <p class="lede">This is the single most important thing to understand about the results,
+      and it follows directly from the finding above.</p>
+
+    <div class="callout">
+      <div class="big">89%<small>filed outside hours</small></div>
+      <div>
+        <p>When a filing lands pre-market or after the close, the price has already moved by
+          the time you can trade. You buy at the <em>gapped</em> open. These strategies
+          therefore trade <strong>post-gap drift</strong> — whether the reaction continues —
+          not the initial reaction itself.</p>
+        <p>A put bought after a CEO-exit gap loses to implied-vol collapse and spreads unless
+          the stock <em>keeps</em> falling. The MongoDB case that started this research is
+          exactly the shape: the 8-K was accepted at <code>08:31 ET</code>, an hour before the
+          open, so the first tradable print already carried the news.</p>
+        <p>This is asserted directly in the test suite, which checks that the long put is
+          profitable at −2%/session drift and unprofitable at +0.1%/session. Any result that
+          appears to capture the gap indicates a timing bug, not an edge.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <span class="sec-num">04</span>
+      <h2 class="sec-title">Departures are plentiful; genuinely forced exits are rare</h2>
+    </div>
+    <p class="lede">Item 5.02 is filed far more often for routine board housekeeping than for
+      a chief executive being removed. Separating the two is most of the work, and it leaves a
+      healthy sample of senior exits but a very small one of dramatic ones.</p>
+
+    <div class="two-up">
+      <figure>
+        <p class="chart-title">Departures by most senior role involved</p>
+        <p class="chart-sub">981 departures · Item 5.02 sections, parsed</p>
+        <div class="chart-scroll" id="c-roles"></div>
+        <figcaption>CEO and CFO exits alone account for <b>604 filings</b>. Director-only and
+          unclassified departures are scored low and fall below the trading threshold.</figcaption>
+      </figure>
+
+      <figure>
+        <p class="chart-title">Severity score distribution</p>
+        <p class="chart-sub">761 senior departures · 0 = routine, 1 = forced and abrupt</p>
+        <div class="chart-scroll" id="c-sev"></div>
+        <figcaption><b>480 events clear the 0.35 trading threshold</b>, but only 20 exceed
+          0.60. The distribution is centred on ordinary, well-managed successions.</figcaption>
+      </figure>
+    </div>
+
+    <figure style="margin-top:16px">
+      <div class="tbl-scroll">
+        <table>
+          <caption>What the filings actually disclose, across 761 senior departures</caption>
+          <thead>
+            <tr><th>Disclosure</th><th class="num">Filings</th><th class="num">Share</th><th>Reading</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Successor named in the same filing</td><td class="num">513</td><td class="num">67.4%</td><td>Orderly handoff — shock dampened</td></tr>
+            <tr><td>Framed as a retirement</td><td class="num">111</td><td class="num">14.6%</td><td>Usually telegraphed well in advance</td></tr>
+            <tr><td>Interim successor only</td><td class="num">77</td><td class="num">10.1%</td><td>A caretaker implies no succession plan</td></tr>
+            <tr><td>Effective immediately</td><td class="num">67</td><td class="num">8.8%</td><td>Unplanned — the strongest common signal</td></tr>
+            <tr><td>For cause / investigation</td><td class="num">14</td><td class="num">1.8%</td><td>Rare and material</td></tr>
+            <tr><td>Admitted disagreement</td><td class="num">3</td><td class="num">0.4%</td><td>Rarest signal in the corpus</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <figcaption>Detecting the last row correctly is harder than it looks. Item 5.02(a)
+        <em>requires</em> issuers to state whether a departure involved a disagreement, so
+        nearly every clean resignation contains the word inside a denial. An earlier version
+        of the parser matched the phrase "is not due to any disagreement" as an admission —
+        which marked routine exits as hostile and made a false positive the
+        highest-severity event in the set.</figcaption>
+    </figure>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <span class="sec-num">05</span>
+      <h2 class="sec-title">The limiting finding: the cost-versus-savings test rests on ten filings</h2>
+    </div>
+    <p class="lede">Idea 2 depends on comparing an upfront charge against the savings it is
+      supposed to buy. Companies mostly do not disclose both.</p>
+
+    <figure>
+      <p class="chart-title">What a restructuring 8-K actually quantifies</p>
+      <p class="chart-sub">113 plan filings · Items 2.05 / 2.06 / 7.01 / 8.01 and attached press releases</p>
+      <div class="chart-scroll" id="c-funnel"></div>
+      <figcaption>Two thirds state a charge — median <b>$18.0M</b>, ranging to Macy's
+        <b>$1.0B</b> three-year plan. But only 17 state an annualized savings figure, and just
+        <b>12 state both</b>. Those twelve are the only filings where the cost-now/benefit-later
+        mismatch is directly measurable.</figcaption>
+    </figure>
+
+    <div class="callout" style="margin-top:16px">
+      <div class="big">10<small>measurable filings</small></div>
+      <div>
+        <p>Ten observations across seven years and 86 issuers cannot support a statistical
+          claim. A mean return over ten option trades is an anecdote with a decimal point,
+          and the honest move is to say so rather than report it.</p>
+        <p>The verified extractions are real and correct — Wayfair's January 2024 cut
+          (<code>$80M</code> charge, <code>$50M</code> savings, 1,650 roles, 13% of
+          headcount), Upstart's <code>$15M</code>/<code>$42M</code> program, Macy's
+          <code>$1B</code> plan. There simply are not enough of them.</p>
+        <p>The cheapest remedy was tried: the sweep was widened to catch restructurings
+          announced under Reg FD (7.01) and Other Events (8.01) rather than only as cost
+          disclosures. It added <strong>two</strong> observations — 10 to 12. Companies
+          simply do not put savings figures in 8-Ks, and no item-code trick changes that.</p>
+        <p>What is left: extend the window before 2019, fall back to charge size and horizon
+          instead of the ratio, or pull savings from the following 10-Q/10-K MD&amp;A where
+          they are actually quantified.</p>
+      </div>
+    </div>
+
+    <figure style="margin-top:16px">
+      <div class="tbl-scroll">
+        <table>
+          <caption>Every filing that disclosed both a charge and annualized savings</caption>
+          <thead>
+            <tr><th>Issuer</th><th>Filed</th><th class="num">Charge</th><th class="num">Savings/yr</th><th class="num">Payback</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>RH</td><td>2020-04-10</td><td class="num">$150.0M</td><td class="num">$20.0M</td><td class="num">7.50y</td></tr>
+            <tr><td>Wayfair</td><td>2024-01-19</td><td class="num">$80.0M</td><td class="num">$50.0M</td><td class="num">1.60y</td></tr>
+            <tr><td>Levi Strauss</td><td>2020-07-07</td><td class="num">$67.4M</td><td class="num">$100.0M</td><td class="num">0.67y</td></tr>
+            <tr><td>Upstart</td><td>2023-01-31</td><td class="num">$15.0M</td><td class="num">$42.0M</td><td class="num">0.36y</td></tr>
+            <tr><td>Kohl's</td><td>2020-09-15</td><td class="num">$23.0M</td><td class="num">$65.0M</td><td class="num">0.35y</td></tr>
+            <tr><td>Bumble</td><td>2025-06-25</td><td class="num">$13.0M</td><td class="num">$40.0M</td><td class="num">0.33y</td></tr>
+            <tr><td>BlackLine</td><td>2023-08-23</td><td class="num">$9.0M</td><td class="num">$28.0M</td><td class="num">0.32y</td></tr>
+            <tr><td>ChargePoint</td><td>2024-01-10</td><td class="num">$14.0M</td><td class="num">$33.0M</td><td class="num">0.42y</td></tr>
+            <tr><td>ChargePoint</td><td>2023-09-06</td><td class="num">$8.0M</td><td class="num">$30.0M</td><td class="num">0.27y</td></tr>
+            <tr><td>Schrödinger</td><td>2025-05-19</td><td class="num">$3.0M</td><td class="num">$30.0M</td><td class="num">0.10y</td></tr>
+            <tr><td>Oportun</td><td>2023-05-08</td><td class="num">$8.0M</td><td class="num">$78.0M</td><td class="num">0.10y</td></tr>
+            <tr><td>Oportun</td><td>2023-11-06</td><td class="num">$7.0M</td><td class="num">$80.0M</td><td class="num">0.09y</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <figcaption>This table undercuts the idea's own premise. The hypothesis was costs
+        landing now against savings that <em>will not arrive for years</em> — but
+        <b>10 of these 12 filings claim payback inside a single year</b>, median
+        <b>4 months</b>. Only RH (7.5 years) and Wayfair (1.6 years) disclose the asymmetry
+        the strategy was designed to exploit. Whether those claims were honest is a different
+        question, and a better one: the tradable version of this idea may be shorting
+        <em>implausibly fast</em> promised paybacks rather than slow ones.</figcaption>
+    </figure>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <span class="sec-num">06</span>
+      <h2 class="sec-title">One filing in five is recycled disclosure</h2>
+    </div>
+    <p class="lede">Idea 3 needed a way to tell a genuine revelation from a document that
+      re-files Monday's press release on Thursday. Two independent signals agree on roughly
+      the same fifth of the corpus — and that is before news data is even wired in.</p>
+
+    <div class="two-up">
+      <figure>
+        <p class="chart-title">Novelty score distribution</p>
+        <p class="chart-sub">n = 1,070 · 0 = pure repeat, 1 = fully new</p>
+        <div class="chart-scroll" id="c-nov"></div>
+        <figcaption><b>204 filings (19%) score below the 0.40 repeat threshold</b>, and 235
+          (22%) concede repetition in their own words — "as previously announced",
+          "reaffirms".</figcaption>
+      </figure>
+
+      <figure>
+        <p class="chart-title">Days between the event and the filing that reports it</p>
+        <p class="chart-sub">n = 1,070 · EDGAR filing date minus earliest event reported</p>
+        <div class="chart-scroll" id="c-lag"></div>
+        <figcaption>Only 21% are filed the same day. <b>52% arrive three or more days
+          later</b> — the window in which the market can learn by other means, and the gap
+          this strategy is built on.</figcaption>
+      </figure>
+    </div>
+
+    <figure style="margin-top:16px">
+      <p class="chart-title">What novelty is scored from</p>
+      <figcaption style="border-top:none; padding-top:0; margin-top:0">
+        Four kinds of evidence, deliberately mixing cheap structural signals with textual
+        ones so no single noisy detector decides: <b>self-reported repetition</b> in the
+        filing text; the <b>report-versus-filing lag</b> above; <b>prior news coverage</b>
+        published strictly before the acceptance timestamp; and <b>fresh-disclosure
+        markers</b> that only appear when something new is being said. The third is the
+        strongest of the four and is currently inactive — it needs the Massive key. The
+        weights are hand-set and have never been calibrated against outcomes, which makes
+        them the largest piece of unvalidated judgement in the codebase.
+      </figcaption>
+    </figure>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <span class="sec-num">07</span>
+      <h2 class="sec-title">How to run it</h2>
+    </div>
+    <p class="lede">The event set is committed, so step 1 is optional — step 2 is where real
+      P&amp;L starts appearing.</p>
+
+    <h3>Setup</h3>
+    <pre><span class="c"># branch: 8kadv-test</span>
+cd gqh-8k-options-research
+uv venv --python 3.11 &amp;&amp; uv pip install -e .
+cp .env.example .env     <span class="c"># add MASSIVE_API_KEY</span></pre>
+
+    <h3 style="margin-top:20px">1 · Build the event set <span style="font-weight:400;color:var(--ink-3)">(EDGAR only — no key needed)</span></h3>
+    <pre>python scripts/fetch_events.py --symbols MDB --start 2019-01-01
+python scripts/fetch_events.py --universe default --start 2019-01-01
+python scripts/describe_events.py <span class="c"># the numbers on this page</span></pre>
+
+    <h3 style="margin-top:20px">2 · Backtest it <span style="font-weight:400;color:var(--ink-3)">(needs MASSIVE_API_KEY)</span></h3>
+    <pre>python scripts/run_backtest.py --hold 5 --hold 10 --hold 21
+
+<span class="c"># narrow the cut</span>
+python scripts/run_backtest.py --strategies exec_put,stock_short --max-cap 10e9
+python scripts/run_backtest.py --spread-pct 0.08   <span class="c"># stress wider spreads</span></pre>
+
+    <p style="margin-top:18px">Results land in <code>data/results/</code> as a trade-level CSV
+      plus a per-strategy summary. The report pairs every mean with a t-statistic, a bootstrap
+      confidence interval, hit rate, and the share of fills that came from real option bars —
+      then flags any strategy with fewer than 8 trades, an interval spanning zero, or mostly
+      modeled fills.</p>
+
+    <p>Every HTTP response is cached permanently, so a re-run of the committed event set is
+      <b>3,430 cache hits and zero network calls</b>. Set <code>EIGHTK_OFFLINE=1</code> to turn
+      a cache miss into an error and freeze a run.</p>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <span class="sec-num">08</span>
+      <h2 class="sec-title">What would make this conclusive</h2>
+    </div>
+    <p class="lede">Ranked by how much each one currently limits the conclusions.</p>
+
+    <ol class="gaps">
+      <li><div><h3>Run it with the Massive key</h3>
+        <p>Everything downstream of event selection is built and tested but unexercised on
+          market data. This is the one step between the current state and actual P&amp;L.</p></div></li>
+      <li><div><h3>Find plan savings outside the 8-K</h3>
+        <p>Widening to Items 7.01 and 8.01 has been done and gained only two observations.
+          The remaining routes are extending the window before 2019, or parsing the
+          following 10-Q/10-K MD&amp;A, where savings against restructuring charges are
+          actually quantified.</p></div></li>
+      <li><div><h3>Calibrate the two scoring functions</h3>
+        <p>Novelty weights and executive-severity weights are hand-set priors. Once prices
+          exist, regress them against realized abnormal returns instead of trusting the
+          ordering.</p></div></li>
+      <li><div><h3>Validate fills on real OPRA quotes</h3>
+        <p>Massive gives daily option bars; the 4% half-spread is an assumption, and it is
+          flat across names when small-cap spreads are much wider. Databento holds true
+          bid/ask — reserved behind a hard cost guard, since the credit balance is finite.</p></div></li>
+      <li><div><h3>Correct for multiple testing</h3>
+        <p>Six strategies × three holding periods × several splits is roughly fifty
+          comparisons. There is no family-wise adjustment yet, so nothing should be called
+          significant until there is.</p></div></li>
+      <li><div><h3>Add an intraday path</h3>
+        <p>The 11% of filings that land mid-session are currently entered at the close.
+          Minute bars would let them be entered near the filing timestamp and would sharpen
+          the gap measurement for everything else.</p></div></li>
+    </ol>
+  </section>
+
+  <footer>
+    Branch <strong>8kadv-test</strong> · 20 modules, ~5,000 lines, 85 tests<br>
+    Events from SEC EDGAR (free, no key) · prices, chains and news from Massive · Databento
+    reserved for OPRA validation behind a spend ledger<br>
+    No return figures appear on this page because none has been computed.
+  </footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var NS = "http://www.w3.org/2000/svg";
+  function el(name, attrs, text) {
+    var n = document.createElementNS(NS, name);
+    for (var k in attrs) { if (attrs[k] != null) n.setAttribute(k, attrs[k]); }
+    if (text != null) n.textContent = text;
+    return n;
+  }
+  function fmt(n) { return n.toLocaleString("en-US"); }
+
+  // ---- horizontal bars: category labels left, value labels at the data end ----
+  function hBars(mount, opts) {
+    var rows = opts.rows, labelW = opts.labelW || 92, valueW = 56;
+    var rowH = opts.rowH || 30, gap = 8, padT = 4, padB = 2;
+    var h = padT + rows.length * rowH + (rows.length - 1) * gap + padB;
+    var w = opts.width || 600;
+    var plotW = w - labelW - valueW - 10;
+    var max = Math.max.apply(null, rows.map(function (r) { return r.v; }));
+    var scale = function (v) { return max > 0 ? (v / max) * plotW : 0; };
+
+    var svg = el("svg", { viewBox: "0 0 " + w + " " + h, width: w, height: h,
+                          role: "img", "aria-label": opts.aria || opts.title || "bar chart" });
+
+    rows.forEach(function (r, i) {
+      var y = padT + i * (rowH + gap);
+      svg.appendChild(el("text", {
+        x: labelW - 10, y: y + rowH / 2, "font-size": 11.5,
+        "text-anchor": "end", "dominant-baseline": "middle"
+      }, r.label));
+
+      var bw = Math.max(scale(r.v), 2);
+      svg.appendChild(el("rect", {
+        x: labelW, y: y + 4, width: bw, height: rowH - 8,
+        rx: 4, fill: r.color || "var(--mark-1)"
+      }));
+
+      svg.appendChild(el("text", {
+        x: labelW + bw + 8, y: y + rowH / 2, "font-size": 11.5,
+        "dominant-baseline": "middle", "class": "v-label"
+      }, fmt(r.v) + (r.suffix || "")));
+    });
+
+    mount.appendChild(svg);
+  }
+
+  // ---- vertical columns with an optional threshold rule ----
+  function vBars(mount, opts) {
+    var bins = opts.bins, w = opts.width || 440, plotH = opts.plotH || 150;
+    var padL = 34, padR = 10, padT = 16, padB = 34;
+    var h = plotH + padT + padB;
+    var plotW = w - padL - padR;
+    var slot = plotW / bins.length, bw = Math.max(slot - 3, 3);
+    var max = Math.max.apply(null, bins.map(function (b) { return b.v; }));
+    // round the axis top up to a readable number
+    var top = max <= 0 ? 1 : Math.ceil(max / Math.pow(10, Math.floor(Math.log10(max)))) *
+                              Math.pow(10, Math.floor(Math.log10(max)));
+    if (top < max) { top = max; }
+    var y = function (v) { return padT + plotH - (v / top) * plotH; };
+
+    var svg = el("svg", { viewBox: "0 0 " + w + " " + h, width: w, height: h,
+                          role: "img", "aria-label": opts.aria || "histogram" });
+
+    // gridlines + y labels at 0, half, top
+    [0, top / 2, top].forEach(function (t) {
+      svg.appendChild(el("line", { x1: padL, x2: w - padR, y1: y(t), y2: y(t),
+                                   stroke: "var(--grid)", "stroke-width": 1 }));
+      svg.appendChild(el("text", { x: padL - 7, y: y(t), "font-size": 10,
+                                   "text-anchor": "end", "dominant-baseline": "middle" },
+                         fmt(Math.round(t))));
+    });
+
+    bins.forEach(function (b, i) {
+      var bh = Math.max((b.v / top) * plotH, b.v > 0 ? 2 : 0);
+      if (bh > 0) {
+        svg.appendChild(el("rect", {
+          x: padL + i * slot + (slot - bw) / 2, y: padT + plotH - bh,
+          width: bw, height: bh, rx: 3, fill: b.color || "var(--mark-1)"
+        }));
+      }
+      if (b.label != null) {
+        svg.appendChild(el("text", {
+          x: padL + i * slot + slot / 2, y: padT + plotH + 14,
+          "font-size": 10, "text-anchor": "middle"
+        }, b.label));
+      }
+      if (b.v > 0 && (b.showValue || b.v === max)) {
+        svg.appendChild(el("text", {
+          x: padL + i * slot + slot / 2, y: padT + plotH - bh - 5,
+          "font-size": 10.5, "text-anchor": "middle", "class": "v-label"
+        }, fmt(b.v)));
+      }
+    });
+
+    if (opts.threshold) {
+      var tx = padL + opts.threshold.at * slot;
+      svg.appendChild(el("line", { x1: tx, x2: tx, y1: padT - 4, y2: padT + plotH,
+                                   stroke: "var(--crit)", "stroke-width": 1.5,
+                                   "stroke-dasharray": "3 3" }));
+      svg.appendChild(el("text", { x: tx + 5, y: padT + 2, "font-size": 10,
+                                   fill: "var(--crit)", "dominant-baseline": "hanging" },
+                         opts.threshold.label));
+    }
+
+    if (opts.axisLabel) {
+      svg.appendChild(el("text", { x: padL + plotW / 2, y: h - 4, "font-size": 10,
+                                   "text-anchor": "middle" }, opts.axisLabel));
+    }
+
+    mount.appendChild(svg);
+  }
+
+  // =================== the charts ===================
+
+  // 02 — session mix. Colour encodes tradability, not identity.
+  hBars(document.getElementById("c-session"), {
+    width: 600, rowH: 38, labelW: 150,
+    aria: "After close 800, pre-market 147, intraday 123",
+    rows: [
+      { label: "After close (POST)",  v: 800, color: "var(--mark-1)" },
+      { label: "Pre-market (PRE)",    v: 147, color: "var(--mark-1)" },
+      { label: "Intraday (RTH)",      v: 123, color: "var(--mark-2)" }
+    ]
+  });
+
+  // 04 — roles
+  hBars(document.getElementById("c-roles"), {
+    width: 470, rowH: 25, labelW: 118,
+    aria: "CEO 350, CFO 254, Director 115, President 112, unclassified 75, COO 45, other 30",
+    rows: [
+      { label: "CEO",          v: 350 },
+      { label: "CFO",          v: 254 },
+      { label: "Director",     v: 115 },
+      { label: "President",    v: 112 },
+      { label: "Unclassified", v: 75  },
+      { label: "COO",          v: 45  },
+      { label: "Chair",        v: 14  },
+      { label: "Other C-suite",v: 16  }
+    ]
+  });
+
+  // 04 — severity histogram, 0.1 bins, threshold at 0.35
+  var sev = [4, 71, 47, 218, 271, 130, 13, 6, 1, 0];
+  vBars(document.getElementById("c-sev"), {
+    width: 430, plotH: 150, axisLabel: "severity score",
+    aria: "Severity concentrated between 0.3 and 0.5; 480 events at or above 0.35",
+    threshold: { at: 3.5, label: "0.35 threshold" },
+    bins: sev.map(function (v, i) {
+      return { v: v, label: (i % 2 === 0) ? (i / 10).toFixed(1) : null,
+               color: i >= 4 ? "var(--mark-1)" : "var(--step-2)" };
+    })
+  });
+
+  // 05 — plan disclosure funnel, ordinal ramp, critical final step
+  hBars(document.getElementById("c-funnel"), {
+    width: 600, rowH: 40, labelW: 184,
+    aria: "113 plan filings, 73 disclose a charge, 23 a horizon, 17 savings, 12 both",
+    rows: [
+      { label: "Plan filings",            v: 113, color: "var(--step-1)" },
+      { label: "…disclose a charge",       v: 73,  color: "var(--step-2)" },
+      { label: "…disclose a horizon",      v: 23,  color: "var(--step-3)" },
+      { label: "…disclose savings",        v: 17,  color: "var(--step-4)" },
+      { label: "…disclose BOTH",           v: 12,  color: "var(--crit)" }
+    ]
+  });
+
+  // 06 — novelty histogram, repeat threshold at 0.40
+  var nov = [5, 61, 51, 87, 319, 190, 221, 91, 32, 13];
+  vBars(document.getElementById("c-nov"), {
+    width: 430, plotH: 150, axisLabel: "novelty score",
+    aria: "204 filings score below the 0.40 repeat threshold",
+    threshold: { at: 4, label: "0.40 repeat line" },
+    bins: nov.map(function (v, i) {
+      return { v: v, label: (i % 2 === 0) ? (i / 10).toFixed(1) : null,
+               color: i < 4 ? "var(--mark-2)" : "var(--mark-1)" };
+    })
+  });
+
+  // 06 — filing lag
+  var lag = [229, 158, 124, 137, 129, 86, 161, 22, 24];
+  vBars(document.getElementById("c-lag"), {
+    width: 430, plotH: 150, axisLabel: "days from event to filing",
+    aria: "229 filed same day; 52 percent filed three or more days later",
+    bins: lag.map(function (v, i) {
+      return { v: v, label: i === 8 ? "8+" : String(i),
+               color: i >= 3 ? "var(--mark-2)" : "var(--mark-1)", showValue: i === 0 };
+    })
+  });
+})();
+</script>
