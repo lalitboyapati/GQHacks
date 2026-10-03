@@ -80,18 +80,50 @@ default and reportable separately via `--include-earnings-confound`.
 bias exactly where it hurts: a company whose CEO left and which then
 collapsed is the observation the strategy most needs to see.
 
+## What the event set actually contains
+
+Measured over the committed 1,054-event set (86 issuers, Items 5.02/2.05/2.06,
+2019-01-02 to 2026-10-02):
+
+| | count | share |
+|---|---|---|
+| senior departures (CEO/CFO/President/COO) | 761 | 72% |
+| ...clearing the 0.35 severity threshold | 481 | |
+| of which CEO | 350 | |
+| restructuring plans | 97 | 8% |
+| filings scoring as recycled disclosure | 201 | 19% |
+
+**Timing is favourable.** 75% of filings are accepted after the close and
+14% pre-market — both give a clean next-session entry. Only 11% land
+intraday, where entry is forced to that day's close.
+
+**Genuinely forced exits are rare.** Just 15 filings (1.5%) admit cause or
+an investigation and 7 (0.7%) an actual disagreement. Succession is named in
+64%. Severity is median 0.32, max 0.82, and only 20 events exceed 0.60 — so
+the "dramatic exit" subsample is small by construction, not by filtering.
+
 ## Known limitations
 
-- **Savings figures are rarely disclosed.** Across the real Item 2.05
-  filings sampled, a charge is usually stated but an annualized savings
-  figure appears in only a minority. The explicit "cost now versus benefit
-  later" comparison is therefore only directly measurable on a subset;
-  elsewhere the charge and horizon carry the signal.
-- **Many restructuring 8-Ks are filed intraday**, which forces the
-  conservative close entry and weakens that strategy's measurable edge.
+- **The cost-now/savings-later comparison rests on ~10 observations.** Of 97
+  restructuring plans, 66 (68%) disclose a charge but only 13 (13%) disclose
+  annualized savings and just **10 (10%) disclose both**. The explicit
+  mismatch behind the efficiency-plan hypothesis is therefore not directly
+  measurable at statistical scale on this universe. Widen it, extend the
+  window, or fall back to charge-size and horizon as the signal — but do not
+  read a mean over ten trades as evidence.
+- **The opening gap is not capturable.** When a filing lands pre-market or
+  after the close, entry is at the already-gapped open. These strategies
+  therefore trade *post-gap drift*, not the initial reaction. This is the
+  single most important thing to understand about the results, and it is
+  asserted directly in `tests/test_integration.py`.
+- **Many restructuring 8-Ks are filed intraday**, forcing the conservative
+  close entry and weakening that strategy's measurable edge.
 - **Daily option bars, not quotes.** Massive bars are session aggregates.
   Use the Databento path below to re-price promising signals on true OPRA
   bid/ask before trusting any of it.
+- **Novelty currently ignores news.** Without `MASSIVE_API_KEY` the score
+  uses filing text and EDGAR report-lag only; prior-coverage evidence is the
+  strongest of its four signals and needs the key.
 
 ## Setup
 
