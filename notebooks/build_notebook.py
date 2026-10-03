@@ -65,8 +65,12 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
+import plotly.io as pio
 from plotly.subplots import make_subplots
 from datetime import datetime, timedelta
+
+# Configure Plotly to render natively in VS Code / Jupyter without requiring external mime parsers
+pio.renderers.default = "notebook_connected"
 
 # Ensure root modules are importable
 project_root = Path(os.getcwd()).parent if "notebooks" in os.getcwd() else Path(os.getcwd())
