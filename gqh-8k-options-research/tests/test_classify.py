@@ -12,6 +12,8 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+import pytest
+
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from eightk.classify import (
@@ -82,6 +84,50 @@ class TestExecChange:
     def test_boilerplate_no_disagreement_is_not_a_red_flag(self):
         change = parse_exec_change(RESIGNATION)
         assert not change.disagreement
+
+    @pytest.mark.parametrize("denial", [
+        "did not involve any disagreement with the Company",
+        "is not due to any disagreement with the Company",
+        "was not the result of a disagreement with the Company",
+        "There were no disagreements with the Company",
+        "is unrelated to any disagreement with the Company",
+    ])
+    def test_every_denial_phrasing_is_not_a_red_flag(self, denial):
+        """Item 5.02(a) denials are near-universal boilerplate.
+
+        Flagging any of them would mark most of the corpus as a disagreement
+        and inflate severity on routine resignations.
+        """
+        change = parse_exec_change(
+            f"On May 1, 2024, the Chief Executive Officer resigned. His resignation {denial} "
+            "on any matter relating to its operations, policies or practices."
+        )
+        assert change.is_departure
+        assert not change.disagreement
+
+    def test_denial_split_across_lines_is_still_a_denial(self):
+        """Filing HTML flattens with newlines mid-sentence.
+
+        Treating a line break as a sentence boundary severs "did not involve
+        any" from the "disagreement" it negates, which silently marks clean
+        resignations as disagreements and inflates their severity.
+        """
+        change = parse_exec_change(
+            "On May 1, 2024, the Chief Executive Officer resigned.\n"
+            "Mr. Smith's resignation did not involve any\n"
+            "disagreement with the Company on any matter."
+        )
+        assert change.is_departure
+        assert not change.disagreement
+
+    def test_genuine_disagreement_is_flagged(self):
+        change = parse_exec_change(
+            "On May 1, 2024, the Chief Financial Officer resigned as a result of a "
+            "disagreement with the Board regarding the Company's accounting practices."
+        )
+        assert change.is_departure
+        assert change.disagreement
+        assert change.severity > 0.5
 
     def test_successor_clawback_is_not_a_firing_for_cause(self):
         """'terminated for cause' here describes the incoming officer.

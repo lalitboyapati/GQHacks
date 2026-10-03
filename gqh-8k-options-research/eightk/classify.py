@@ -172,9 +172,17 @@ _COMP_ONLY_RE = re.compile(
 )
 
 # Hard red flags: these materially change how a departure should be read.
-_DISAGREEMENT_RE = re.compile(
-    r"(?i)\b(?:disagreement\s+with\s+the\s+(?:company|registrant|issuer)"
-    r"|did\s+not\s+involve\s+any\s+disagreement)\b"
+#
+# Item 5.02(a) requires an issuer to say whether a departure involved a
+# disagreement, so almost every clean resignation contains the word inside a
+# denial -- "not due to any disagreement", "did not involve any
+# disagreement", "was not the result of a disagreement". Enumerating those
+# phrasings is a losing game, so detection is inverted: find the word, then
+# look back to the start of its sentence for any negation cue. Only an
+# un-negated mention counts, which is the rare and genuinely material case.
+_DISAGREEMENT_WORD_RE = re.compile(r"(?i)\bdisagreement")
+_NEGATION_CUE_RE = re.compile(
+    r"(?i)\b(?:not|no|nor|without|never|absence\s+of|unrelated\s+to)\b"
 )
 _FOR_CAUSE_RE = re.compile(
     r"(?i)\b(?:for\s+cause|terminated\s+for\s+cause|misconduct|violation\s+of\s+(?:the\s+)?company\s+polic"
@@ -294,18 +302,33 @@ class ExecChange:
         }
 
 
-def _negated_disagreement(section: str) -> bool:
-    """True when the filing uses the standard 'no disagreement' boilerplate.
+def _affirmative_disagreement(window: str) -> bool:
+    """True only when a disagreement is asserted rather than denied.
 
-    Nearly every clean resignation includes "did not involve any
-    disagreement", so matching the word alone would flag the whole corpus.
-    Only an *affirmative* disagreement is a red flag.
+    Negation is searched in the sentence containing the keyword. Two details
+    matter for real filings:
+
+    * Whitespace is normalized first. Filing HTML flattens with newlines in
+      the middle of sentences, and treating a line break as a sentence end
+      would sever "not involve any" from the "disagreement" it negates.
+    * A very short sentence prefix means the boundary was almost certainly an
+      abbreviation's period ("Mr."), not a real sentence end, so the lookback
+      is widened rather than trusted.
     """
-    return bool(re.search(
-        r"(?i)(?:not\s+(?:involve|the\s+result\s+of)\s+(?:any\s+)?disagreement"
-        r"|no\s+disagreement|without\s+any\s+disagreement)",
-        section,
-    ))
+    text = " ".join(window.split())
+    for match in _DISAGREEMENT_WORD_RE.finditer(text):
+        boundary = max(
+            text.rfind(". ", 0, match.start()),
+            text.rfind("; ", 0, match.start()),
+        )
+        sentence_start = boundary + 1 if boundary != -1 else 0
+        prefix = text[sentence_start:match.start()]
+        if len(prefix) < 25:
+            prefix = text[max(0, match.start() - 160):match.start()]
+        if _NEGATION_CUE_RE.search(prefix):
+            continue
+        return True
+    return False
 
 
 def parse_exec_change(section: str) -> ExecChange:
@@ -340,9 +363,7 @@ def parse_exec_change(section: str) -> ExecChange:
 
     person = _extract_person(window) if departure_match else None
 
-    affirmative_disagreement = (
-        bool(_DISAGREEMENT_RE.search(window)) and not _negated_disagreement(window)
-    )
+    affirmative_disagreement = _affirmative_disagreement(window)
 
     exec_change = ExecChange(
         is_departure=is_departure,
