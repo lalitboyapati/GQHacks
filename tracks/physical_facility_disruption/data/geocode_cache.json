@@ -1,15 +1,45 @@
 {
+  "a limited partner interest, in": null,
+  "a private offering exempt from, or": null,
+  "a solicitation of any vote, or": null,
+  "abandon the planned separation, or": null,
   "account balances with holdings, in": null,
   "acres of real property, in": null,
+  "actions taken to stop, or": null,
   "addition, the company will incur costs to implement": null,
   "addition, there can be no assurance that other": null,
   "alliance refinery, belle chasse, la": null,
   "alternatives for participants, in": null,
+  "and incorporated herein, in": null,
+  "and is, in": {
+    "display_name": "IS and CS block, Bagalur Road, Dwaraka Nagar, Kogilu, Bengaluru North City Corporation, Bengaluru, Yelahanka taluku, Bengaluru Urban, Karnataka, 560063, India",
+    "importance": 7.094453345536e-05,
+    "lat": 13.124912,
+    "lon": 77.6209419,
+    "query": "and is, IN"
+  },
+  "and not validly withdrawn, in": null,
+  "and other risks described, in": null,
   "and participants' investment, in": null,
+  "and the remaining charges, in": null,
+  "are accepted for exchange, in": null,
   "are expected to result, in": null,
+  "are, in": {
+    "display_name": "Are, Karvir, Kolhapur, Maharashtra, India",
+    "importance": 0.14672403372243834,
+    "lat": 16.6354003,
+    "lon": 74.1320836,
+    "query": "are, IN"
+  },
+  "as defined, in": null,
+  "as described, in": null,
   "as presented, in": null,
+  "as set forth, in": null,
+  "as that term is used, in": null,
   "as they may be amended, or": null,
+  "as they may be extended, or": null,
   "barry, united kingdom. - additional corporate": null,
+  "be accessed at hormelfoods.com, in": null,
   "belle chasse, la": {
     "display_name": "Belle Chasse, Plaquemines Parish, Louisiana, 70037, United States",
     "importance": 0.36591189903985394,
@@ -17,7 +47,38 @@
     "lon": -90.0140042,
     "query": "Belle Chasse, LA"
   },
+  "between the company and hep., in": null,
+  "buda, tx": {
+    "display_name": "Buda, Hays County, Texas, United States",
+    "importance": 0.4696253167523786,
+    "lat": 30.082475,
+    "lon": -97.8417144,
+    "query": "Buda, TX"
+  },
+  "but at, or": {
+    "display_name": "Every Which Way But Loose, Shadowood, Clackamas County, Oregon, 97034, United States",
+    "importance": 0.04005865949492637,
+    "lat": 45.3855622,
+    "lon": -122.7062344,
+    "query": "but at, OR"
+  },
+  "by other means, in": null,
   "by reference. the information, in": null,
+  "by-reference language, in": null,
+  "campti, la": {
+    "display_name": "Campti, Natchitoches Parish, Louisiana, United States",
+    "importance": 0.3708703066864196,
+    "lat": 31.8934954,
+    "lon": -93.1182202,
+    "query": "Campti, LA"
+  },
+  "canonsburg, pa": {
+    "display_name": "Canonsburg, Washington County, Pennsylvania, United States",
+    "importance": 0.44592762116740453,
+    "lat": 40.2588173,
+    "lon": -80.1867206,
+    "query": "Canonsburg, PA"
+  },
   "cologne, germany": {
     "display_name": "K\u00f6ln, Nordrhein-Westfalen, Deutschland",
     "importance": 0.7583028574734825,
@@ -25,7 +86,26 @@
     "lon": 6.959974,
     "query": "Cologne, Germany"
   },
+  "columbus, oh": {
+    "display_name": "Columbus, Franklin County, Ohio, United States",
+    "importance": 0.6841113154817149,
+    "lat": 39.9622601,
+    "lon": -83.0007065,
+    "query": "Columbus, OH"
+  },
+  "com. slides, in": null,
+  "communication products used, in": null,
+  "company and the partnership., in": null,
+  "connection with the proposed transaction, hf sinclair": null,
   "credited to their plan account, in": null,
+  "curtailments, or": null,
+  "days, or": {
+    "display_name": "Days Creek, Douglas County, Oregon, 97429, United States",
+    "importance": 0.36001248335965585,
+    "lat": 42.9722514,
+    "lon": -123.1722129,
+    "query": "days, OR"
+  },
   "deposit., in": {
     "display_name": "BBMP Dry Waste Collection Deposit, Hennur Bagalur Road, Arkavathy Layout 20th Block, Geddalahalli, K Narayanapura, Bengaluru East City Corporation, Bengaluru, Bangalore East, Bengaluru Urban, Karnataka, 560043, India",
     "importance": 7.094453345536e-05,
@@ -33,14 +113,59 @@
     "lon": 77.6417929,
     "query": "deposit., IN"
   },
+  "documents that have been filed, or": null,
+  "down the operations discussed, in": null,
+  "estimates, or": null,
   "facility is expected to result, in": null,
   "factors previously set forth, in": null,
+  "filing under the securities act, or": null,
+  "first national bank of, pa": {
+    "display_name": "First National, William Penn Highway, Newlonsburg, Murrysville, Westmoreland County, Pennsylvania, 15668, United States",
+    "importance": 5.3521782253712027e-05,
+    "lat": 40.4214509,
+    "lon": -79.6606717,
+    "query": "First National Bank of, PA"
+  },
+  "freeport, tx": {
+    "display_name": "Freeport, Brazoria County, Texas, United States",
+    "importance": 0.48986029728240804,
+    "lat": 28.9496782,
+    "lon": -95.3461433,
+    "query": "Freeport, TX"
+  },
+  "fuzhou, china": {
+    "display_name": "\u798f\u5dde\u5e02, \u798f\u5efa\u7701, \u4e2d\u56fd",
+    "importance": 0.6247940704659676,
+    "lat": 26.0774954,
+    "lon": 119.2918215,
+    "query": "Fuzhou, China"
+  },
   "general incorporation language, in": null,
+  "generation will be restored, in": null,
   "given that the company is, in": null,
+  "global industrial conference, in": null,
+  "global industrials conference, in": null,
+  "group and as president of, ut": null,
+  "had been temporarily idled, in": null,
+  "hawesville, ky": {
+    "display_name": "Hawesville, Hancock County, Kentucky, United States",
+    "importance": 0.456516836198595,
+    "lat": 37.9000554,
+    "lon": -86.754988,
+    "query": "Hawesville, KY"
+  },
+  "historical financial results, or": null,
+  "including those contained, in": null,
   "incorporated by reference, in": null,
   "individually, or": null,
+  "information is included, in": null,
+  "into any registration statement, or": null,
+  "investor and analyst day event, in": null,
+  "is expected to be incurred, in": null,
   "is expected to take place, in": null,
+  "is incorporated by reference, in": null,
   "is subject to the satisfaction, or": null,
+  "k. the information set forth, in": null,
   "kaiserslautern, germany": {
     "display_name": "Kaiserslautern, Rheinland-Pfalz, Deutschland",
     "importance": 0.6209043208655481,
@@ -55,6 +180,17 @@
     "lon": 5.6513208,
     "query": "Lanaken, Belgium"
   },
+  "laura made landfall on the, la": null,
+  "marshall, tx": {
+    "display_name": "Marshall, Harrison County, Texas, United States",
+    "importance": 0.5486149354609211,
+    "lat": 32.5447756,
+    "lon": -94.3661004,
+    "query": "Marshall, TX"
+  },
+  "materiality of any information, in": null,
+  "materially from those expressed, or": null,
+  "may cause one, or": null,
   "mechelen, belgium": {
     "display_name": "Mechelen, Antwerpen, Vlaanderen, Belgi\u00eb / Belgique / Belgien",
     "importance": 0.6209991948975233,
@@ -71,14 +207,73 @@
     "lon": 73.7726337,
     "query": "million, IN"
   },
+  "mine. the information set forth, in": null,
+  "modify, or": null,
+  "names did not result, in": null,
+  "navajo pipeline, co": {
+    "display_name": "Pipeline Road (Navajo Route 7049), McKinley County, New Mexico, United States",
+    "importance": 0.053383334859235486,
+    "lat": 35.7241087,
+    "lon": -108.441715,
+    "query": "Navajo Pipeline, CO"
+  },
+  "new york, ny": {
+    "display_name": "New York, United States",
+    "importance": 0.8817923363604117,
+    "lat": 40.7127281,
+    "lon": -74.0060152,
+    "query": "New York, NY"
+  },
   "non-cash charge to be recorded, in": null,
   "noncash charge to be recorded, in": null,
+  "not constitute an offer to sell, or": null,
+  "of an offer to sell, or": null,
+  "of both stock and cash, in": null,
+  "of common stock to be issued, in": null,
+  "of directors, or": null,
+  "of hep, in": null,
+  "of operations at the mill, in": null,
   "of the company's business, in": null,
+  "of the planned separation, or": null,
+  "of the securities act, in": null,
   "of their plan account balance, in": null,
   "of their total account balance., in": null,
+  "one, or": {
+    "display_name": "just open area, Snowshoe trail or path in the summer well marked, Labrador, Newfoundland and Labrador, A0R 1B0, Canada",
+    "importance": 2.6000610360830357e-05,
+    "lat": 52.8837037,
+    "lon": -66.8932621,
+    "query": "One, OR"
+  },
+  "or incorporated by reference, in": null,
+  "or the solicitation of tenders, or": null,
+  "orange, tx": {
+    "display_name": "Orange County, Texas, United States",
+    "importance": 0.5941600329733231,
+    "lat": 30.1228634,
+    "lon": -93.9041169,
+    "query": "Orange, TX"
+  },
   "part i, item": null,
   "participants who tender some, or": null,
+  "participated, in": null,
+  "participation, in": null,
+  "particularly, in": null,
+  "payable, in": null,
   "price adjustments as described, in": null,
+  "repurchase program authorized, in": null,
+  "repurchase program may be made, in": null,
+  "resulting, in": null,
+  "results. the change, in": null,
+  "riceboro, ga": {
+    "display_name": "Riceboro, Liberty County, Georgia, 31323, United States",
+    "importance": 0.41264182722604775,
+    "lat": 31.7354935,
+    "lon": -81.4334408,
+    "query": "Riceboro, GA"
+  },
+  "risk factors, in": null,
+  "safe harbor provisions included, in": null,
   "schkopau, germany": {
     "display_name": "Schkopau, Saalekreis, Sachsen-Anhalt, 06258, Deutschland",
     "importance": 0.44944568143391417,
@@ -87,6 +282,17 @@
     "query": "Schkopau, Germany"
   },
   "schkopau, germany. - performance materials": null,
+  "sed, or": {
+    "display_name": "SED Plus, Piazza Pietro Martini, Centro storico, Aristanis/Oristano, Sardigna/Sardegna, 09170, Italia",
+    "importance": 6.229419394212279e-05,
+    "lat": 39.9037813,
+    "lon": 8.5923999,
+    "query": "sed, OR"
+  },
+  "selected statements contained, in": null,
+  "served as president of asia for, ut": null,
+  "set forth by specific reference, in": null,
+  "since joining the company, in": null,
   "sinton texas flat roll steel mill, sinton, tx": null,
   "sinton, tx": {
     "display_name": "Sinton, San Patricio County, Texas, United States",
@@ -95,8 +301,26 @@
     "lon": -97.5092297,
     "query": "Sinton, TX"
   },
+  "some of the statements, in": null,
+  "spending guidance as set forth, in": null,
+  "terneuzen, netherlands": {
+    "display_name": "Terneuzen, Zeeland, Nederland",
+    "importance": 0.4865244101122988,
+    "lat": 51.298843,
+    "lon": 3.8422044,
+    "query": "Terneuzen, Netherlands"
+  },
+  "texarkana, tx": {
+    "display_name": "Texarkana, Bowie County, Texas, United States",
+    "importance": 0.566468494512144,
+    "lat": 33.4466208,
+    "lon": -94.0765653,
+    "query": "Texarkana, TX"
+  },
+  "the company may not waive, or": null,
   "the following risk factor, in": null,
   "the information contained, in": null,
+  "the information set forth, in": null,
   "the information, in": {
     "display_name": "Office Of The Sub-Divisional Information Culture Officer, Newtown Road, Deshbandhu Para, Islampur, Uttar Dinajpur, West Bengal, 733202, India",
     "importance": 5.0061036087541274e-05,
@@ -104,13 +328,26 @@
     "lon": 88.1865906,
     "query": "the information, IN"
   },
+  "the majority of these charges, in": null,
+  "the manner, in": null,
+  "the meanings ascribed to them, in": null,
+  "the open market, or": null,
+  "the presentation are furnished, in": null,
+  "the risk factors disclosed, in": null,
   "the slides to be presented, in": null,
+  "the solicitation the company, hep": null,
+  "the statements, in": null,
   "the weak demand, in": null,
+  "this filing, in": null,
   "this report is material or complete, or": null,
+  "to certain conditions set forth, in": null,
+  "to hf sinclair, in": null,
+  "to return to operations, in": null,
   "to the conditions set forth, in": null,
   "to the participant's account, in": null,
   "total, future cash payments related to severance": null,
   "total, these costs are expected to be in the": null,
+  "transactions from time to time, or": null,
   "uentrop, germany": {
     "display_name": "Uentrop, Hamm, Nordrhein-Westfalen, 59071, Deutschland",
     "importance": 0.311877314681546,
@@ -120,6 +357,21 @@
   },
   "units at the company's site, in": null,
   "units at the pernis facility., in": null,
+  "unless extended, or": null,
+  "unless specifically noted, in": null,
+  "vanscoy, saskatchewan": {
+    "display_name": "Vanscoy, Saskatchewan, Canada",
+    "importance": 0.18671166781109327,
+    "lat": 52.0020563,
+    "lon": -106.974736,
+    "query": "Vanscoy, Saskatchewan"
+  },
   "was involved, in": null,
+  "whether made before, or": null,
+  "which consents were solicited, in": null,
+  "which is expected to be on, or": null,
+  "will be participating, in": null,
+  "with navajo pipeline, co": null,
+  "without delivering consents, or": null,
   "works councils and unions., in": null
 }

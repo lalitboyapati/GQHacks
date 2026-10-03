@@ -28,41 +28,64 @@ logger = get_logger("massive_disruptions")
 _DISRUPTION_RE = re.compile(
     r"""
     \b(
-        (?:facility|plant|refinery|mill|warehouse|factory|mine|terminal|pipeline|smelter|foundry|complex|unit)
+        (?:facility|plant|refinery|mill|warehouse|factory|mine|terminal|pipeline|smelter|foundry|complex|unit|kiln|furnace|coker|cracker)
         .{0,80}?
-        (?:fire|explosion|blast|outage|shutdown|shut\s*down|destroyed|damaged|idled|incident|hurricane|flood|freeze|storm)
-      | (?:fire|explosion|blast|outage|shutdown|shut\s*down|incident)
+        (?:fire|explosion|blast|outage|shutdown|shut\s*down|destroyed|damaged|idled|incident|hurricane|flood|freeze|storm|tornado|earthquake|evacuation)
+      | (?:fire|explosion|blast|outage|shutdown|shut\s*down|incident|evacuation)
         .{0,80}?
-        (?:facility|plant|refinery|mill|warehouse|factory|mine|terminal|pipeline|smelter|foundry|operations?|complex)
-      | (?:industrial|warehouse|plant|mill|refinery)\s+fire
+        (?:facility|plant|refinery|mill|warehouse|factory|mine|terminal|pipeline|smelter|foundry|operations?|complex|kiln|furnace)
+      | (?:industrial|warehouse|plant|mill|refinery|chemical)\s+fire
       | fire\s+at\s+the\s+(?:company|corporation|issuer)'?s?
       | explosion\s+at\s+the\s+(?:company|corporation|issuer)'?s?
       | (?:incident|accident)\s+at\s+(?:the\s+)?(?:company'?s\s+)?(?:facility|plant|refinery|mill|mine|terminal)
       | force\s+majeure.{0,80}?(?:facility|plant|refinery|mill|mine|operations|production)
       | (?:facility|plant|refinery|mill|mine|operations|production).{0,80}?force\s+majeure
       | (?:cease|ceasing|ceased)\s+operations?\s+at
-      | (?:permanently|indefinitely)\s+(?:close|closing|closed|idle|idling)\s
-      | (?:operations?|production)\s+(?:suspended|halted|idled|curtailed|interrupted)
+      | (?:permanently|indefinitely|temporarily)\s+(?:close|closing|closed|idle|idling|idled)\s
+      | (?:facility|plant|refinery|mill|mine|smelter|factory|warehouse|terminal|operations|production)
+        .{0,40}?
+        (?:suspended|halted|idled|curtailed|interrupted)
+      | (?:temporary|unplanned|forced|emergency)\s+(?:production\s+)?(?:curtailment|suspension|halt)
+        .{0,60}?
+        (?:facility|plant|refinery|mill|mine|operations|production|unit)
       | power\s+outage
       | gas\s+leak
       | chemical\s+(?:release|spill|leak)
       | (?:refinery|mill|plant)\s+(?:outage|upset|turnaround).{0,40}?(?:unplanned|forced|emergency)
-      | unplanned\s+(?:outage|shutdown|downtime)
+      | unplanned\s+(?:outage|shutdown|downtime|trip)
+      | (?:unit|furnace|boiler|cracker|coker)\s+(?:trip|tripped|upset|outage)
+      | (?:blast\s+furnace|coke\s+oven|rolling\s+mill).{0,40}?(?:fire|outage|idled|damaged|incident)
+      | (?:weather|storm|freeze|hurricane|tornado).{0,60}?(?:impact(?:ed|ing)?|damage(?:d)?|outage|shutdown).{0,40}?(?:facility|plant|refinery|mill|operations|production)
+      | (?:facility|plant|refinery|mill|operations|production).{0,60}?(?:weather|storm|freeze|hurricane|tornado).{0,40}?(?:related\s+)?(?:outage|shutdown|damage|disruption)
+      | rail(?:road)?\s+derailment.{0,60}?(?:facility|plant|refinery|mill|terminal)
+      | (?:evacuat(?:e|ed|ion)).{0,40}?(?:facility|plant|refinery|mill|site)
     )\b
     """,
     re.IGNORECASE | re.VERBOSE,
 )
 
 # Employee-benefit / blackout trading 8-Ks match "temporary suspension" but are not physical.
+# Also drop common forward-looking / risk-factor boilerplate that the broader plant language hits.
 _FALSE_POSITIVE_RE = re.compile(
     r"""
     \b(
         item\s*5\.04
+      | item\s*1\.04
       | temporary\s+suspension\s+of\s+trading
       | employee\s+benefit\s+plan
       | registrant's\s+employee\s+benefit
       | blackout\s+period
       | equity\s+compensation
+      | possibility\s+of\s+inefficiencies,\s*curtailments?\s+or\s+shutdowns?
+      | facility\s+dispositions?,\s*shutdowns?
+      | including\s+but\s+not\s+limited\s+to,?\s*our\s+ability\s+to\s+shut\s*down
+      | our\s+ability\s+to\s+shut\s*down
+      | manufacturing\s+facilities\s+may\s+be\s+shutdown
+      | regulatory\s+agencies\s+ordering\s+certain\s+of\s+our\s+mines
+      | patterns?\s+of\s+violations
+      | mine\s+safety\s*[–—-]?\s*reporting
+      | spent\s+\w+\s+years?\s+at
+      | prior\s+to\s+that,?\s*mr\.
     )\b
     """,
     re.IGNORECASE | re.VERBOSE,
@@ -79,10 +102,12 @@ _DISRUPTION_TERTIARY = frozenset({
 _DISRUPTION_TYPE_PATTERNS: list[tuple[str, re.Pattern[str]]] = [
     ("facility_fire", re.compile(r"\bfire\b", re.I)),
     ("explosion", re.compile(r"\b(explosion|blast)\b", re.I)),
-    ("plant_outage", re.compile(r"\b(outage|power\s+outage)\b", re.I)),
-    ("plant_shutdown", re.compile(r"\b(shut\s*down|shutdown|suspended|halted|idled)\b", re.I)),
+    ("plant_outage", re.compile(r"\b(outage|power\s+outage|unit\s+trip)\b", re.I)),
+    ("plant_shutdown", re.compile(r"\b(shut\s*down|shutdown|suspended|halted|idled|curtail(?:ed|ment))\b", re.I)),
     ("force_majeure", re.compile(r"\bforce\s+majeure\b", re.I)),
     ("chemical_release", re.compile(r"\b(chemical|gas)\s+(release|spill|leak)\b", re.I)),
+    ("weather_disruption", re.compile(r"\b(hurricane|tornado|freeze|flood|storm|earthquake)\b", re.I)),
+    ("evacuation", re.compile(r"\bevacuat", re.I)),
 ]
 
 
