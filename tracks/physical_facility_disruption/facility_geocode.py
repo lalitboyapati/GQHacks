@@ -117,6 +117,10 @@ _STOP_CITIES = frozenset({
     "united", "steel", "company", "corporation", "these", "those", "this",
     "that", "with", "from", "into", "over", "under", "after", "before",
     "incorporated", "general", "reference", "slides", "assurance",
+    "individually", "noncash", "non-cash", "weak", "presented", "conditions",
+    "participants", "credited", "alternatives", "account", "balances",
+    "information", "material", "complete", "report", "amended", "tender",
+    "some", "any", "each", "such", "other", "certain", "including",
 })
 
 _COUNTRIES = frozenset({

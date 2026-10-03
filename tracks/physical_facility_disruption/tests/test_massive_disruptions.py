@@ -40,6 +40,27 @@ class DisruptionFilterTests(unittest.TestCase):
         )
         self.assertFalse(is_disruption_text(text))
 
+    def test_risk_factor_curtailment_boilerplate_rejected(self):
+        text = (
+            "significant and specialty products; the possibility of inefficiencies, "
+            "curtailments or shutdowns of our refining facilities"
+        )
+        self.assertFalse(is_disruption_text(text))
+
+    def test_mine_safety_item_rejected(self):
+        text = (
+            "Item 1.04 Mine Safety – Reporting of Shutdown and Patterns of Violations "
+            "Eagle Materials Inc. permanently closed a mine face after a citation."
+        )
+        self.assertFalse(is_disruption_text(text))
+
+    def test_weather_outage_still_matches(self):
+        text = (
+            "The Company announced a temporary disruption of operations at its "
+            "Freeport, Texas, facility due to hurricane-related flooding."
+        )
+        self.assertTrue(is_disruption_text(text))
+
     def test_explosion(self):
         text = "An explosion occurred at the chemical facility; operations remain suspended."
         self.assertTrue(is_disruption_text(text))
@@ -48,3 +69,4 @@ class DisruptionFilterTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+

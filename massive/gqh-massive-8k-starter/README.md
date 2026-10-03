@@ -3,6 +3,24 @@
 Starter notebook for the Massive challenge. You need **Python 3.10+** ([python.org](https://www.python.org/downloads/))
 and a **Massive API key** (from the Discord channel).
 
+## Layout (inside this repo)
+
+```
+massive/gqh-massive-8k-starter/
+├── gator-quant-hacks-8k-options-challenge.ipynb
+├── requirements.txt
+├── setup.ps1 / setup.sh
+├── .env.example
+├── .env                 ← local only (gitignored); optional if infra key exists
+├── .venv/               ← created by setup (gitignored)
+└── .massive_cache/      ← created on first run (gitignored)
+```
+
+In **GQHacks**, the notebook also reads `MASSIVE_API_KEY` / `MASSIVE_APP_KEY` from
+`infrastructure/backtest/.env` (and a few track `.env` files) if the starter `.env`
+is missing or still has the placeholder. Cache files land under this folder even when
+you open the notebook from the repo root in Cursor/VS Code.
+
 ## Setup (about 2 minutes)
 
 **macOS / Linux** — in a terminal, from this folder:
@@ -22,12 +40,12 @@ The script creates a `.venv`, installs `requirements.txt`, registers the Jupyter
 
 Then:
 
-1. Open `.env` and replace `your-key-here` with your key (no spaces or quotes).
-2. Start Jupyter: `source .venv/bin/activate && jupyter lab` (Windows: `.venv\Scripts\activate; jupyter lab`),
-   or open the notebook in VS Code.
-3. Pick the kernel **Python (Gator Quant Hacks .venv)** and run all cells. Section 1 prints
-   `API key loaded (ends xxxx)` when it finds your key. The first full run takes about 10 minutes;
-   API responses are cached in `.massive_cache/`, so later runs take seconds.
+1. Open `.env` and replace `your-key-here` with your key (no spaces or quotes),
+   **or** rely on `infrastructure/backtest/.env` already used by the tracks.
+2. In Cursor/VS Code: open the `.ipynb`, pick kernel **Python (Gator Quant Hacks .venv)**,
+   Run All. Or: `.venv\Scripts\activate; jupyter lab`
+3. Section 1 should print `API key loaded (ends xxxx)`. First full run ~10 minutes;
+   later runs use `.massive_cache/`.
 
 ## Manual setup
 
@@ -46,8 +64,9 @@ optional `%pip install -r requirements.txt` cell at the top of the notebook, the
 
 - **"Kernel not found" when opening the notebook** — run the setup script, or just pick any Python 3.10+ kernel.
 - **`ModuleNotFoundError`** — the notebook is on a different kernel than the one you installed into.
-  Run `import sys; print(sys.executable)` in a cell; it should end in `.venv/bin/python`.
-- **Prompted for an API key** — `.env` is missing, in the wrong folder, or still has the placeholder.
+  Run `import sys; print(sys.executable)` in a cell; it should end in `.venv\Scripts\python.exe` (Windows)
+  or `.venv/bin/python`.
+- **Prompted for an API key** — no usable key in env / starter `.env` / `infrastructure/backtest/.env`.
 - **Slow iteration** — set `RUN_PLACEBO = False` in section 2 while exploring (saves ~8 minutes per
   run); turn it back on before you submit.
 - **Stale recent data** — the cache never expires. Delete `.massive_cache/` to refetch.
