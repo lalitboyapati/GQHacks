@@ -1,10 +1,15 @@
-"""Run a historical backtest with the Webull OpenAPI data feed.
+"""Run a historical backtest with the shared Webull OpenAPI data feed.
 
-Configuration is read from backtest/.env (never hardcode credentials).
+Configuration is read from ``infrastructure/backtest/.env`` (never hardcode
+credentials). Research strategies live under ``tracks/<name>/strategy.py`` and
+are selected with ``GQH_TRACK``. Reference demos live under
+``infrastructure/examples/strategies/`` and use ``WEBULL_STRATEGY``.
 
-    uv run python backtest/main.py
-or
-    python backtest/main.py
+    # Research track (preferred for 8-K work)
+    GQH_TRACK=item_202_results_ops uv run python infrastructure/backtest/main.py
+
+    # Reference demo strategy
+    WEBULL_STRATEGY=dual_ma uv run python infrastructure/backtest/main.py
 """
 
 from __future__ import annotations
@@ -15,15 +20,18 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-# Make the project importable when run as a script (python examples/backtest/main.py):
-#   - PROJECT_ROOT hosts the reusable ``webull_bt`` package.
-#   - the sibling ``strategies`` dir lets WEBULL_STRATEGY name a strategy by its
-#     bare module name (e.g. "dual_ma"), loaded via _load_strategy_class().
+# Path layout after the multi-track restructure:
+#   infrastructure/backtest/main.py  -> this file
+#   infrastructure/webull_bt/        -> shared engine package
+#   infrastructure/examples/strategies/ -> demo strategies (dual_ma, ...)
+#   tracks/<track>/strategy.py       -> per-person / per-8-K-item research
 _HERE = Path(__file__).resolve()
-PROJECT_ROOT = _HERE.parent.parent.parent
-STRATEGIES_DIR = _HERE.parent.parent / "strategies"
-sys.path.insert(0, str(PROJECT_ROOT))
-sys.path.insert(0, str(STRATEGIES_DIR))
+INFRA_ROOT = _HERE.parent.parent
+REPO_ROOT = INFRA_ROOT.parent
+TRACKS_DIR = REPO_ROOT / "tracks"
+EXAMPLES_STRATEGIES_DIR = INFRA_ROOT / "examples" / "strategies"
+sys.path.insert(0, str(INFRA_ROOT))
+sys.path.insert(0, str(EXAMPLES_STRATEGIES_DIR))
 
 import backtrader as bt
 from dotenv import load_dotenv
@@ -41,31 +49,54 @@ logger = get_logger("backtest.main")
 
 
 def _load_strategy_class(module_name: str) -> type[bt.Strategy]:
-    """Dynamically load a strategy class by its module (file) name.
+    """Load ``STRATEGY_CLASS`` from a research track or an examples module.
 
-    ``module_name`` is the strategy file's name without the ``.py``
-    extension (e.g. "dual_ma" for examples/strategies/dual_ma.py). The module
-    must expose a module-level ``STRATEGY_CLASS`` attribute pointing at the
-    ``bt.Strategy`` subclass to run; every strategy in this project follows
-    this convention. Adding a new strategy file under examples/strategies/
-    that follows the same convention makes it usable here with no changes to
-    this loader.
+    Resolution order:
+      1. ``GQH_TRACK=<track>`` → ``tracks/<track>/strategy.py``
+      2. ``WEBULL_STRATEGY=<module>`` → ``infrastructure/examples/strategies/<module>.py``
     """
-    try:
-        module = importlib.import_module(module_name)
-    except ImportError as exc:
-        raise SystemExit(
-            f"invalid WEBULL_STRATEGY={module_name!r}: could not import module "
-            f"{module_name!r} ({exc}); it must be a .py file in examples/strategies/"
-        ) from exc
+    track = os.environ.get("GQH_TRACK", "").strip()
+    if track:
+        track_dir = TRACKS_DIR / track
+        strategy_path = track_dir / "strategy.py"
+        if not strategy_path.exists():
+            available = sorted(
+                p.name for p in TRACKS_DIR.iterdir()
+                if p.is_dir() and not p.name.startswith("_") and (p / "strategy.py").exists()
+            ) if TRACKS_DIR.exists() else []
+            raise SystemExit(
+                f"invalid GQH_TRACK={track!r}: expected {strategy_path}. "
+                f"Known tracks with strategy.py: {available or '(none)'}"
+            )
+        # Unique module name per track so importlib does not reuse another track.
+        sys.path.insert(0, str(track_dir))
+        # Drop a cached "strategy" module if a previous track was loaded in-process.
+        sys.modules.pop("strategy", None)
+        try:
+            module = importlib.import_module("strategy")
+        except ImportError as exc:
+            raise SystemExit(
+                f"invalid GQH_TRACK={track!r}: could not import tracks/{track}/strategy.py ({exc})"
+            ) from exc
+        label = f"track:{track}"
+    else:
+        try:
+            module = importlib.import_module(module_name)
+        except ImportError as exc:
+            raise SystemExit(
+                f"invalid WEBULL_STRATEGY={module_name!r}: could not import module "
+                f"{module_name!r} ({exc}); it must be a .py file in "
+                "infrastructure/examples/strategies/ OR set GQH_TRACK to a research track"
+            ) from exc
+        label = f"example:{module_name}"
 
     strategy_cls = getattr(module, "STRATEGY_CLASS", None)
     if strategy_cls is None or not (
         isinstance(strategy_cls, type) and issubclass(strategy_cls, bt.Strategy)
     ):
         raise SystemExit(
-            f"invalid WEBULL_STRATEGY={module_name!r}: module {module_name!r} does not "
-            "define a module-level STRATEGY_CLASS pointing at a bt.Strategy subclass"
+            f"invalid strategy source {label}: module does not define a module-level "
+            "STRATEGY_CLASS pointing at a bt.Strategy subclass"
         )
     return strategy_cls
 
@@ -357,17 +388,15 @@ def run_backtest() -> None:
     for symbol in symbols:
         cerebro.adddata(build_feed(data_client, symbol=symbol), name=symbol)
 
-    # WEBULL_STRATEGY names a strategy module (its .py filename, without the
-    # extension) living in examples/strategies/, e.g. "dual_ma" or
-    # "portfolio". The module must expose STRATEGY_CLASS; see
-    # _load_strategy_class(). WEBULL_STRATEGY_PARAMS optionally overrides that
-    # strategy's params, e.g. "short_period=10,long_period=30".
+    # Prefer a research track (GQH_TRACK). Fall back to examples strategies.
+    track = os.environ.get("GQH_TRACK", "").strip()
     strategy_module = os.environ.get("WEBULL_STRATEGY", "dual_ma").strip()
     strategy_cls = _load_strategy_class(strategy_module)
     strategy_params = _parse_strategy_params()
+    display_name = f"track:{track}" if track else f"example:{strategy_module}"
     logger.info(
         "[Backtest] strategy=%s symbols=%s params=%s",
-        strategy_module, symbols, strategy_params,
+        display_name, symbols, strategy_params,
     )
     cerebro.addstrategy(strategy_cls, **strategy_params)
     # A default sizer for strategies that submit orders without an explicit
@@ -402,7 +431,7 @@ def run_backtest() -> None:
     strat = results[0]
     metrics = _compute_metrics(cerebro, strat, starting_value)
     _print_results(strat, metrics)
-    _maybe_render_report(strat, metrics, strategy_module, symbols)
+    _maybe_render_report(strat, metrics, display_name, symbols)
 
 
 def main() -> None:

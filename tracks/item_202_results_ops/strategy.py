@@ -39,7 +39,7 @@ logger = get_logger("strategy.item_202")
 
 
 def _default_cache_path() -> Path:
-    return Path(__file__).resolve().parent.parent / "data" / "item_202_events_high_vol.json"
+    return Path(__file__).resolve().parent / "data" / "item_202_events_high_vol.json"
 
 
 def _parse_iso_date(value: str | None) -> str | None:
@@ -109,8 +109,9 @@ class Item202OptionsImpactStrategy(bt.Strategy):
         )
         cache_path = Path(cache)
         if not cache_path.is_absolute():
-            starter_root = Path(__file__).resolve().parents[2]
-            candidate = starter_root / cache_path
+            # Resolve relative caches from the repo root (…/GQHacks).
+            repo_root = Path(__file__).resolve().parents[2]
+            candidate = repo_root / cache_path
             cache_path = candidate if candidate.exists() else Path.cwd() / cache_path
 
         gte = _parse_iso_date(self.p.filing_date_gte) or _parse_iso_date(

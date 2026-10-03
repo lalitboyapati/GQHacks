@@ -31,7 +31,7 @@ from pathlib import Path
 # Add project root and strategies directory to sys.path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 STRATEGIES_DIR = PROJECT_ROOT / "examples" / "strategies"
-BACKTEST_ENV = PROJECT_ROOT / "examples" / "backtest" / ".env"
+BACKTEST_ENV = PROJECT_ROOT / "backtest" / ".env"
 
 sys.path.insert(0, str(PROJECT_ROOT))
 sys.path.insert(0, str(STRATEGIES_DIR))

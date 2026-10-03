@@ -11,10 +11,11 @@ from pathlib import Path
 
 import backtrader as bt
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-STRATEGIES_DIR = PROJECT_ROOT / "examples" / "strategies"
-sys.path.insert(0, str(PROJECT_ROOT))
-sys.path.insert(0, str(STRATEGIES_DIR))
+TRACK_ROOT = Path(__file__).resolve().parents[1]
+REPO_ROOT = TRACK_ROOT.parents[1]
+INFRA_ROOT = REPO_ROOT / "infrastructure"
+sys.path.insert(0, str(INFRA_ROOT))
+sys.path.insert(0, str(TRACK_ROOT))
 
 from webull_bt.massive_filings import (
     Item202Event,
@@ -24,7 +25,7 @@ from webull_bt.massive_filings import (
     resolve_trade_date,
     save_events_cache,
 )
-from item_202_options import Item202OptionsImpactStrategy
+from strategy import Item202OptionsImpactStrategy
 
 
 class Item202ParsingTests(unittest.TestCase):

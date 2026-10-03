@@ -22,29 +22,24 @@ The strategy no longer holds stock for a fixed 5 days. It:
    - dead-money / IV-crush exit after `min_hold_bars`
    - max hold / near expiry
 
-## Run
+## Backtest notes
 
 ```bash
-cd gqh-webull-backtrader-starter
-uv run python examples/backtest/main.py
+# from repo root
+python run.py --track item_202_results_ops
+python run.py --track item_202_results_ops DDOG,PLTR -c 1200
+
+# refresh Massive event cache
+uv run --project infrastructure python tracks/item_202_results_ops/scripts/fetch_item_202_events.py --symbols DDOG,RBLX --gte 2023-01-01
 ```
 
-Refresh events (disclosures included by default):
+Key params (also via ``WEBULL_STRATEGY_PARAMS``):
 
-```bash
-uv run python examples/scripts/fetch_item_202_events.py \
-  --symbols DDOG,RBLX,SHOP,SOFI,U,UBER,PLTR,AI \
-  --gte 2023-01-01 \
-  --out examples/data/item_202_events_high_vol.json
-```
-
-## Key params
-
-| Param | Meaning |
-| --- | --- |
-| `premium_pct` | Portfolio fraction risked per option ticket |
-| `take_profit` / `stop_loss` | Premium return exits |
-| `max_hold_bars` / `min_hold_bars` | Time bounds |
-| `dead_money_atr` | Exit if follow-through &lt; this · ATR after min hold |
-| `invalidate_atr` | Exit if underlying moves against by this · ATR |
-| `expiry_weeks` | Synthetic option tenor |
+| Param | Default | Meaning |
+| --- | --- | --- |
+| `premium_pct` | 0.02 | Portfolio fraction risked per option ticket |
+| `take_profit` / `stop_loss` | 0.60 / 0.40 | Premium return exits |
+| `max_hold_bars` / `min_hold_bars` | 10 / 2 | Time bounds |
+| `dead_money_atr` | 0.25 | Exit if follow-through < this · ATR after min hold |
+| `invalidate_atr` | 1.0 | Exit if underlying moves against by this · ATR |
+| `expiry_weeks` | 4 | Synthetic option tenor |

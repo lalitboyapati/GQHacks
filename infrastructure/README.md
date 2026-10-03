@@ -1,4 +1,14 @@
-# Webull Backtrader Starter Kit
+# Shared Backtesting Infrastructure
+
+> Part of **Gator Quant Hacks (GQHacks)** — the common Webull + Backtrader engine
+> used by every research track under [`../tracks/`](../tracks/).
+>
+> Research strategies do **not** live here. Put novel 8-K work in `tracks/<name>/`
+> and run with `python run.py --track <name>` from the repo root.
+
+---
+
+# Webull Backtrader Engine (formerly starter kit)
 
 > **Gator Quant Hacks (GQHacks) 2026 · Systematic Trading Track**  
 > A production-ready quantitative backtesting and simulated live trading starter kit combining the [Webull OpenAPI](https://developer.webull.com/apis/docs) with [Backtrader](https://github.com/mementum/backtrader).

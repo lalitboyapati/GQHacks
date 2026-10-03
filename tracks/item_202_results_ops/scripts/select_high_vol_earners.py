@@ -22,8 +22,10 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(PROJECT_ROOT))
+TRACK_ROOT = Path(__file__).resolve().parents[1]
+REPO_ROOT = TRACK_ROOT.parents[1]
+INFRA_ROOT = REPO_ROOT / "infrastructure"
+sys.path.insert(0, str(INFRA_ROOT))
 
 from webull_bt.logging_utils import get_logger, setup_logging
 from webull_bt.massive_filings import (
@@ -134,21 +136,21 @@ def main() -> None:
     parser.add_argument("--lte", default="", help="filing_date <= YYYY-MM-DD")
     parser.add_argument(
         "--out-events",
-        default=str(PROJECT_ROOT / "examples" / "data" / "item_202_events_high_vol.json"),
+        default=str(TRACK_ROOT / "data" / "item_202_events_high_vol.json"),
         help="Filtered event cache path",
     )
     parser.add_argument(
         "--out-ranking",
-        default=str(PROJECT_ROOT / "examples" / "data" / "earnings_vol_ranking.json"),
+        default=str(TRACK_ROOT / "data" / "earnings_vol_ranking.json"),
         help="Full ranking JSON path",
     )
     args = parser.parse_args()
 
-    load_dotenv(PROJECT_ROOT / "examples" / "backtest" / ".env")
+    load_dotenv(INFRA_ROOT / "backtest" / ".env")
     setup_logging()
 
     if not _get_api_key():
-        raise SystemExit("Set MASSIVE_APP_KEY or MASSIVE_API_KEY in examples/backtest/.env")
+        raise SystemExit("Set MASSIVE_APP_KEY or MASSIVE_API_KEY in infrastructure/backtest/.env")
 
     from massive import RESTClient
 

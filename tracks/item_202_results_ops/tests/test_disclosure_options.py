@@ -7,8 +7,10 @@ import unittest
 from datetime import date
 from pathlib import Path
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(PROJECT_ROOT))
+TRACK_ROOT = Path(__file__).resolve().parents[1]
+REPO_ROOT = TRACK_ROOT.parents[1]
+INFRA_ROOT = REPO_ROOT / "infrastructure"
+sys.path.insert(0, str(INFRA_ROOT))
 
 from webull_bt.disclosure_polarity import category_polarity, resolve_signal_polarity
 from webull_bt.options_sim import black_scholes_price, round_strike
