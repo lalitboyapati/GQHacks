@@ -30,6 +30,7 @@ GQHacks/
 │   ├── _template/
 │   ├── item_202_results_ops/       # Item 2.02 → synthetic calls/puts (Backtrader)
 │   ├── disclosure_advantage/       # 5.02 / 2.05-2.06 / novelty event-study
+│   ├── physical_facility_disruption/ # disruption 8-K × satellite → sell premium
 │   ├── item_502_officer_changes/   # overview → exec_put strategy
 │   ├── item_205_restructuring/     # overview → efficiency collar
 │   └── …
