@@ -220,10 +220,15 @@ _NAME_STOPWORDS = {
 }
 
 
+def _strip_possessive(name: str) -> str:
+    """Drop a trailing possessive so "Wilderotter's" reads as a name."""
+    return re.sub(r"(?i)[’']s?$", "", name.strip()).strip()
+
+
 def _extract_person(window: str) -> str | None:
     """Pull the officer's name out of a departure sentence."""
     for match in _NAME_BEFORE_ROLE_RE.finditer(window):
-        candidate = " ".join(match.group(1).split())
+        candidate = _strip_possessive(" ".join(match.group(1).split()))
         parts = candidate.split()
         if len(parts) < 2:
             continue
@@ -232,7 +237,7 @@ def _extract_person(window: str) -> str | None:
         return candidate
     honorific = _HONORIFIC_RE.search(window)
     if honorific:
-        return honorific.group(1)
+        return _strip_possessive(honorific.group(1)) or None
     return None
 
 
