@@ -11,6 +11,11 @@ ATM options** (Black–Scholes marks on the Webull underlying path) and exits on
 rule-based conditions: take-profit, stop-loss, underlying invalidation, dead
 money after IV crush, or max hold / near-expiry — not a calendar lag.
 
+Hold / ATR knobs are specified in **trading sessions** and scaled to the
+active ``WEBULL_TIMESPAN`` (so ``-t M5`` keeps the same economic horizon as
+``-t D``). Optional ``max_hold_hours`` caps the hold on intraday feeds when
+the thesis is a short post-filing gap.
+
 Webull's starter feed is equity-only; option premiums are simulated so the
 backtester can evaluate call/put P&L without a Massive Options entitlement.
 """
@@ -32,6 +37,7 @@ from webull_bt.options_sim import (
     nearest_friday,
     round_strike,
 )
+from webull_bt.timespan_scale import resolve_timespan, scale_hold_params
 from webull_bt.timeutils import to_market_tz
 
 
@@ -55,6 +61,25 @@ def _bar_day(data) -> date:
     return date.fromisoformat(str(bar_dt)[:10])
 
 
+def _bar_day_ago(data, ago: int = -1) -> date | None:
+    try:
+        bar_dt = data.datetime.datetime(ago)
+    except Exception:
+        return None
+    if isinstance(bar_dt, datetime):
+        return bar_dt.date()
+    return date.fromisoformat(str(bar_dt)[:10])
+
+
+def _is_first_bar_of_day(data) -> bool:
+    """True on the first bar of a calendar session (needed for intraday feeds)."""
+    if len(data) < 2:
+        return True
+    today = _bar_day(data)
+    prev = _bar_day_ago(data, -1)
+    return prev is None or prev != today
+
+
 class Item202OptionsImpactStrategy(bt.Strategy):
     """Buy calls on positive disclosure polarity, puts on negative.
 
@@ -62,12 +87,25 @@ class Item202OptionsImpactStrategy(bt.Strategy):
     -------------------------------
     * ``take_profit`` / ``stop_loss`` on option premium %
     * Underlying invalidation vs entry ± ``invalidate_atr`` · ATR
-    * Dead-money exit after ``min_hold_bars`` if favorable move < ``dead_money_atr`` · ATR
-    * Hard ``max_hold_bars`` and/or DTE < ``min_dte_exit``
+    * Dead-money exit after scaled ``min_hold`` if favorable move is tiny
+    * Hard scaled ``max_hold`` and/or DTE < ``min_dte_exit``
+
+    Horizons are session-based and converted to bars from ``WEBULL_TIMESPAN``.
     """
 
     params = dict(
-        atr_period=14,
+        # Session-based horizons (scaled → bars). Set atr_period / min_hold_bars /
+        # max_hold_bars > 0 to override scaling explicitly.
+        atr_sessions=14.0,
+        atr_period=0,
+        min_hold_sessions=2.0,
+        max_hold_sessions=5.0,
+        min_hold_bars=0,
+        max_hold_bars=0,
+        # On M1/M5/M60, optionally cap hold to the first N RTH hours (0=off).
+        # Useful when the thesis is a short filing→market gap.
+        max_hold_hours=0.0,
+        timespan="",  # empty → WEBULL_TIMESPAN / D
         min_gap_pct=0.005,  # 0.5% min gap when taxonomy is unsigned
         min_gap_atr=0.35,
         premium_pct=0.02,  # fraction of portfolio spent on each option ticket
@@ -76,8 +114,6 @@ class Item202OptionsImpactStrategy(bt.Strategy):
         stop_loss=0.40,
         invalidate_atr=1.0,
         dead_money_atr=0.25,
-        min_hold_bars=2,
-        max_hold_bars=10,
         min_dte_exit=5,
         events_cache="",
         refresh_events=False,
@@ -96,8 +132,25 @@ class Item202OptionsImpactStrategy(bt.Strategy):
         self.closed_trades = []  # equity trades unused; kept for report compat
         self.set_tradehistory(True)
 
+        feed_ts = None
+        if self.datas:
+            feed_ts = getattr(self.datas[0].p, "timespan", None)
+        self._scale = scale_hold_params(
+            timespan=self.p.timespan or feed_ts or resolve_timespan(None),
+            min_hold_sessions=float(self.p.min_hold_sessions),
+            max_hold_sessions=float(self.p.max_hold_sessions),
+            atr_sessions=float(self.p.atr_sessions),
+            min_hold_bars=int(self.p.min_hold_bars) or None,
+            max_hold_bars=int(self.p.max_hold_bars) or None,
+            atr_period=int(self.p.atr_period) or None,
+            max_hold_hours=float(self.p.max_hold_hours or 0.0),
+        )
+        self._min_hold_bars = int(self._scale["min_hold_bars"])
+        self._max_hold_bars = int(self._scale["max_hold_bars"])
+        self._atr_period = int(self._scale["atr_period"])
+
         for data in self.datas:
-            self.inds[data] = {"atr": bt.ind.ATR(data, period=self.p.atr_period)}
+            self.inds[data] = {"atr": bt.ind.ATR(data, period=self._atr_period)}
             self.option_positions[data] = None
             self._last_opt_value[data] = 0.0
 
@@ -137,12 +190,18 @@ class Item202OptionsImpactStrategy(bt.Strategy):
             self._events_by_trade_date[ticker] = by_day
 
         logger.info(
-            "[Item2.02/Options] events=%d cache=%s tp=%.0f%% sl=%.0f%% max_hold=%s",
+            "[Item2.02/Options] events=%d cache=%s timespan=%s "
+            "hold=%d..%d bars (%.1fg..%.1fg sessions) atr=%d tp=%.0f%% sl=%.0f%%",
             sum(len(v) for v in self._events_by_trade_date.values()),
             cache_path,
+            self._scale["timespan"],
+            self._min_hold_bars,
+            self._max_hold_bars,
+            self._scale["min_hold_sessions"],
+            self._scale["max_hold_sessions"],
+            self._atr_period,
             self.p.take_profit * 100.0,
             self.p.stop_loss * 100.0,
-            self.p.max_hold_bars,
         )
 
     def next(self):
@@ -225,7 +284,11 @@ class Item202OptionsImpactStrategy(bt.Strategy):
     def _maybe_enter(self, data) -> None:
         if self.option_positions[data] is not None:
             return
-        if len(data) < self.p.atr_period + 2:
+        if len(data) < self._atr_period + 2:
+            return
+        # Overnight gap is only defined at the first bar of the trade date.
+        # On M5/M1, later bars would otherwise treat bar-to-bar noise as the print.
+        if not _is_first_bar_of_day(data):
             return
 
         symbol = (data._name or data._dataname or "").upper()
@@ -235,6 +298,7 @@ class Item202OptionsImpactStrategy(bt.Strategy):
             return
 
         event = day_events[0]
+        # First bar of the day: prior bar is the previous session's last print.
         prev_close = float(data.close[-1])
         open_px = float(data.open[0])
         if prev_close <= 0:
@@ -370,12 +434,12 @@ class Item202OptionsImpactStrategy(bt.Strategy):
             reason = f"stop_loss:{ret:.0%}"
         elif dte <= int(self.p.min_dte_exit):
             reason = f"dte:{dte}"
-        elif bars_held >= int(self.p.max_hold_bars):
+        elif bars_held >= self._max_hold_bars:
             reason = f"max_hold:{bars_held}"
         elif favorable <= -float(self.p.invalidate_atr) * atr:
             reason = "underlying_invalidation"
         elif (
-            bars_held >= int(self.p.min_hold_bars)
+            bars_held >= self._min_hold_bars
             and favorable < float(self.p.dead_money_atr) * atr
         ):
             reason = "dead_money_iv_crush"
