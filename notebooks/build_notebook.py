@@ -331,6 +331,25 @@ print("4. Risk Control  : Deep OTM yields massive returns ONLY on drops > 8-10%;
 print("                   ATM protects against theta if the drop is mild (-3% to -5%).")
 print("=" * 65)""")
 
+# Cell 9: 10 Notable Small-Cap Executive Departures Empirical Dataset
+add_md("""## 7. Empirical Validation: 10 Notable Small-Cap Executive Departures
+
+We examine the exact 8-K filings for the 10 small-cap operator departures provided in our research universe.
+Each filing has been located on SEC EDGAR and contains the specific **Item 5.02** disclosure of sudden management departure.""")
+
+add_code("""import json
+
+json_path = project_root / "notebooks" / "ten_notable_departures.json"
+with open(json_path, "r", encoding="utf-8") as f:
+    cases_data = json.load(f)
+
+df_cases = pd.DataFrame(cases_data)
+# Display key metadata
+cols = ["company", "ticker", "operator", "event_date", "filing_date", "items", "doc_url"]
+print(f"Loaded {len(df_cases)} verified 8-K executive departure filings:")
+df_cases[cols]""")
+
+
 # Build Notebook dict
 notebook_content = {
     "cells": cells,

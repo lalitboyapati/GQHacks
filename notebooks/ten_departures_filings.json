@@ -1,0 +1,165 @@
+[
+  {
+    "case": {
+      "company": "American Apparel",
+      "ticker": "APP",
+      "cik": "0001338801",
+      "operator": "Dov Charney (Founder & CEO)",
+      "date": "2014-06-18"
+    },
+    "match": null
+  },
+  {
+    "case": {
+      "company": "LendingClub",
+      "ticker": "LC",
+      "cik": "0001409970",
+      "operator": "Renaud Laplanche (Founder & CEO)",
+      "date": "2016-05-09"
+    },
+    "match": {
+      "form": "8-K",
+      "filing_date": "2016-05-09",
+      "report_date": "2016-05-06",
+      "accession": "0001409970-16-002096",
+      "items": "2.02,5.02,9.01",
+      "url": "https://www.sec.gov/Archives/edgar/data/1409970/000140997016002096/q116form8-ker.htm"
+    }
+  },
+  {
+    "case": {
+      "company": "Blue Apron",
+      "ticker": "APRN",
+      "cik": "0001701114",
+      "operator": "Matthew Wadiak (Co-Founder & COO)",
+      "date": "2017-07-27"
+    },
+    "match": {
+      "form": "8-K",
+      "filing_date": "2017-07-25",
+      "report_date": "2017-07-24",
+      "accession": "0001104659-17-046825",
+      "items": "5.02,7.01,9.01",
+      "url": "https://www.sec.gov/Archives/edgar/data/1701114/000110465917046825/a17-18391_18k.htm"
+    }
+  },
+  {
+    "case": {
+      "company": "Overstock.com",
+      "ticker": "OSTK",
+      "cik": "0001130713",
+      "operator": "Patrick Byrne (Founder & CEO)",
+      "date": "2019-08-22"
+    },
+    "match": {
+      "form": "8-K",
+      "filing_date": "2019-08-22",
+      "report_date": "2019-08-22",
+      "accession": "0001130713-19-000065",
+      "items": "5.02,7.01,9.01",
+      "url": "https://www.sec.gov/Archives/edgar/data/1130713/000113071319000065/a8-kpatrickbyrne20190822.htm"
+    }
+  },
+  {
+    "case": {
+      "company": "Nikola Corporation",
+      "ticker": "NKLA",
+      "cik": "0001731289",
+      "operator": "Trevor Milton (Founder & Exec Chairman)",
+      "date": "2020-09-20"
+    },
+    "match": {
+      "form": "8-K",
+      "filing_date": "2020-09-21",
+      "report_date": "2020-09-20",
+      "accession": "0001104659-20-106691",
+      "items": "5.02,7.01,8.01,9.01",
+      "url": "https://www.sec.gov/Archives/edgar/data/1731289/000110465920106691/tm2030359d3_8k.htm"
+    }
+  },
+  {
+    "case": {
+      "company": "Canoo Inc.",
+      "ticker": "GOEV",
+      "cik": "0001750153",
+      "operator": "Ulrich Kranz (Co-Founder & CEO)",
+      "date": "2021-04-30"
+    },
+    "match": {
+      "form": "8-K",
+      "filing_date": "2021-04-23",
+      "report_date": "2021-04-23",
+      "accession": "0001558370-21-004738",
+      "items": "5.08,8.01",
+      "url": "https://www.sec.gov/Archives/edgar/data/1750153/000155837021004738/goev-20210423x8k.htm"
+    }
+  },
+  {
+    "case": {
+      "company": "Lordstown Motors",
+      "ticker": "RIDE",
+      "cik": "0001759546",
+      "operator": "Steve Burns (CEO) & Julio Rodriguez (CFO)",
+      "date": "2021-06-14"
+    },
+    "match": {
+      "form": "8-K",
+      "filing_date": "2021-06-17",
+      "report_date": "2021-06-17",
+      "accession": "0001104659-21-082332",
+      "items": "7.01,8.01,9.01",
+      "url": "https://www.sec.gov/Archives/edgar/data/1759546/000110465921082332/tm2119909d1_8k.htm"
+    }
+  },
+  {
+    "case": {
+      "company": "Workhorse Group",
+      "ticker": "WKHS",
+      "cik": "0001425287",
+      "operator": "Duane Hughes (CEO)",
+      "date": "2021-07-29"
+    },
+    "match": {
+      "form": "8-K",
+      "filing_date": "2021-07-29",
+      "report_date": "2021-07-26",
+      "accession": "0001628280-21-014824",
+      "items": "5.02,7.01,9.01",
+      "url": "https://www.sec.gov/Archives/edgar/data/1425287/000162828021014824/wkhs-20210726.htm"
+    }
+  },
+  {
+    "case": {
+      "company": "Beyond Meat",
+      "ticker": "BYND",
+      "cik": "0001655210",
+      "operator": "Doug Ramsey (COO), Bernie Adcock (CSCO)",
+      "date": "2022-09-20"
+    },
+    "match": {
+      "form": "8-K",
+      "filing_date": "2022-09-23",
+      "report_date": "2022-09-20",
+      "accession": "0001655210-22-000194",
+      "items": "5.02",
+      "url": "https://www.sec.gov/Archives/edgar/data/1655210/000165521022000194/bynd-20220920.htm"
+    }
+  },
+  {
+    "case": {
+      "company": "TuSimple Holdings",
+      "ticker": "TSP",
+      "cik": "0001823593",
+      "operator": "Dr. Xiaodi Hou (Co-Founder, CEO & CTO)",
+      "date": "2022-10-30"
+    },
+    "match": {
+      "form": "8-K",
+      "filing_date": "2022-10-31",
+      "report_date": "2022-10-31",
+      "accession": "0001628280-22-027421",
+      "items": "2.02,9.01",
+      "url": "https://www.sec.gov/Archives/edgar/data/1823593/000162828022027421/tsp-20221031.htm"
+    }
+  }
+]
