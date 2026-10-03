@@ -393,6 +393,18 @@ def run_backtest() -> None:
     strategy_module = os.environ.get("WEBULL_STRATEGY", "dual_ma").strip()
     strategy_cls = _load_strategy_class(strategy_module)
     strategy_params = _parse_strategy_params()
+    known = getattr(strategy_cls, "params", None)
+    if strategy_params and known is not None:
+        allowed = set(known._getkeys()) if hasattr(known, "_getkeys") else set(dict(known._getitems()))
+        # backtrader AutoInfoClass: iterate via _getkeys / items
+        try:
+            allowed = set(known._getkeys())
+        except Exception:
+            allowed = {k for k, _ in known._getitems()}
+        dropped = sorted(k for k in strategy_params if k not in allowed)
+        strategy_params = {k: v for k, v in strategy_params.items() if k in allowed}
+        if dropped:
+            logger.info("[Backtest] ignoring params not on strategy: %s", dropped)
     display_name = f"track:{track}" if track else f"example:{strategy_module}"
     logger.info(
         "[Backtest] strategy=%s symbols=%s params=%s",

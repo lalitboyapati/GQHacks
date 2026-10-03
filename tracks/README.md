@@ -7,6 +7,7 @@ share `infrastructure/` for data, brokerage simulation, metrics, and charts.
 | --- | --- | --- | --- |
 | [`item_202_results_ops`](./item_202_results_ops/) | Item 2.02 Results of Operations → synthetic calls/puts | backtrader | Active |
 | [`disclosure_advantage`](./disclosure_advantage/) | 5.02 / 2.05-2.06 / novelty options event-study | event (`eightk`) | Active |
+| [`physical_facility_disruption`](./physical_facility_disruption/) | Facility fire/outage 8-Ks × FIRMS → sell premium (CSP) | backtrader | Active |
 | [`item_502_officer_changes`](./item_502_officer_changes/) | Item 5.02 overview → `exec_put` | stub | Overview |
 | [`item_205_restructuring`](./item_205_restructuring/) | Item 2.05/2.06 overview → `efficiency_collar` | stub | Overview |
 | [`item_101_material_agreements`](./item_101_material_agreements/) | Item 1.01 / 1.02 material agreements | stub | Stub |

@@ -1,0 +1,17 @@
+{
+  "X": {
+    "facility_name": "Example Gary Works (replace with real coords)",
+    "lat": 41.605,
+    "lon": -87.337
+  },
+  "NUE": {
+    "facility_name": "Example Nucor site (replace with real coords)",
+    "lat": 34.730,
+    "lon": -86.586
+  },
+  "CLF": {
+    "facility_name": "Example Cleveland-Cliffs site (replace with real coords)",
+    "lat": 41.482,
+    "lon": -81.669
+  }
+}

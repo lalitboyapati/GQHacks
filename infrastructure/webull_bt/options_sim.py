@@ -48,7 +48,11 @@ def annualized_vol_from_atr(atr: float, spot: float) -> float:
 
 @dataclass
 class OptionPosition:
-    """Long call or put tracked with synthetic BS marks."""
+    """Long or short call/put tracked with synthetic BS marks.
+
+    ``side`` is ``\"long\"`` (debit) or ``\"short\"`` (credit). Short marks are
+    liabilities: P&L rises when the option cheapens (IV crush / favorable spot).
+    """
 
     symbol: str
     option_type: str  # call | put
@@ -59,7 +63,8 @@ class OptionPosition:
     entry_underlying: float
     entry_date: date
     entry_bar: int
-    polarity: int
+    polarity: int = 0
+    side: str = "long"  # long | short
     primary_category: str | None = None
     tertiary_category: str | None = None
     rate: float = 0.04
@@ -81,13 +86,24 @@ class OptionPosition:
         )
 
     def market_value(self, spot: float, asof: date, vol: float | None = None) -> float:
-        return self.premium(spot, asof, vol) * 100.0 * self.contracts
+        """Mark-to-market equity impact of the option book.
+
+        Long: positive asset value. Short: negative liability (premium to buy back).
+        """
+        raw = self.premium(spot, asof, vol) * 100.0 * self.contracts
+        return raw if self.side == "long" else -raw
 
     def cost_basis(self) -> float:
-        return self.entry_premium * 100.0 * self.contracts
+        """Cash paid (long, positive) or received (short, negative credit)."""
+        raw = self.entry_premium * 100.0 * self.contracts
+        return raw if self.side == "long" else -raw
 
     def pnl(self, spot: float, asof: date, vol: float | None = None) -> float:
         return self.market_value(spot, asof, vol) - self.cost_basis()
+
+    @property
+    def is_short(self) -> bool:
+        return self.side == "short"
 
 
 def nearest_friday(after: date, weeks: int = 4) -> date:
