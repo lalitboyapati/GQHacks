@@ -62,10 +62,13 @@ backtrader-example/
 │   │   └── .env                #   live config
 │   └── strategies/             #   strategy folder ← your strategies go here
 │       ├── dual_ma.py          #     example #1: dual moving average (single/multi symbol)
-│       └── portfolio.py        #     example #2: multi-symbol momentum rotation
+│       ├── portfolio.py        #     example #2: multi-symbol momentum rotation
+│       └── item_202_options.py #     example #3: Item 2.02 earnings / options-impact
 ├── docs/                       # docs (including this guide)
 └── pyproject.toml              # dependency manifest
 ```
+
+> Item 2.02 walkthrough: [`ITEM_202_OPTIONS.md`](ITEM_202_OPTIONS.md)
 
 ---
 

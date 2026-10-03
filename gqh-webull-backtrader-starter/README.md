@@ -69,7 +69,8 @@ gqh-webull-backtrader-starter/
 │   ├── visualize.py             # Plotly HTML Report + RecorderAnalyzer
 │   ├── visualize_lwc.py         # TradingView Lightweight Charts HTML Report
 │   ├── timeutils.py             # Timezone conversions (US Eastern/DST) & session codecs
-│   └── logging_utils.py         # Standardized logging setup
+│   ├── logging_utils.py         # Standardized logging setup
+│   └── massive_filings.py       # Massive 8-K Item 2.02 + Benzinga earnings helpers
 ├── examples/
 │   ├── backtest/
 │   │   ├── main.py              # Backtest CLI runner & report orchestrator
@@ -77,13 +78,19 @@ gqh-webull-backtrader-starter/
 │   ├── live/
 │   │   ├── main.py              # Simulated live runner & broker interface
 │   │   └── .env.example         # Live & Sandbox execution credentials template
+│   ├── data/
+│   │   └── item_202_events_sample.json  # Offline Item 2.02 event cache
+│   ├── scripts/
+│   │   └── fetch_item_202_events.py     # Pull/cache Massive Item 2.02 events
 │   └── strategies/              # Strategy catalog
 │       ├── dual_ma.py           # Multi-symbol Dual Moving Average crossover
-│       └── portfolio.py         # Multi-symbol Momentum Rotation & Rebalancing
+│       ├── portfolio.py         # Multi-symbol Momentum Rotation & Rebalancing
+│       └── item_202_options.py  # Item 2.02 earnings / options-impact PEAD proxy
 ├── docs/
 │   ├── README.md                # Quickstart documentation (Chinese)
 │   ├── USAGE.md                 # Detailed guide (Chinese)
-│   └── USAGE_EN.md              # Participant guide (English)
+│   ├── USAGE_EN.md              # Participant guide (English)
+│   └── ITEM_202_OPTIONS.md      # Item 2.02 strategy + options interpretation
 ├── pyproject.toml               # Package metadata and dependencies
 └── uv.lock                      # Locked dependency versions
 ```
@@ -238,6 +245,21 @@ To test your own quant algorithm:
    ```
 
 3. Run `python examples/backtest/main.py`.
+
+### Item 2.02 / earnings options-impact strategy
+
+`examples/strategies/item_202_options.py` trades the underlying around SEC
+**Item 2.02** earnings filings from the [Massive](https://massive.com) API
+(PEAD momentum or gap-fade). See [`docs/ITEM_202_OPTIONS.md`](docs/ITEM_202_OPTIONS.md).
+
+```bash
+# Uses shipped sample events by default (no Massive key required)
+python ../run.py AAPL --strategy item_202_options --count 1200 \
+  --params hold_bars=5,min_gap_atr=0.5,mode=momentum
+```
+
+Set `MASSIVE_API_KEY` and run `examples/scripts/fetch_item_202_events.py` to
+refresh the event cache from live 8-K filings.
 
 ---
 

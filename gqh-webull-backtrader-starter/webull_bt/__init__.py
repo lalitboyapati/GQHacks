@@ -17,6 +17,11 @@ from webull_bt.timeutils import (
 from webull_bt.logging_utils import get_logger, setup_logging
 from webull_bt.visualize import RecorderAnalyzer, render_report
 from webull_bt.visualize_lwc import render_report_lwc
+from webull_bt.massive_filings import (
+    Item202Event,
+    load_item_202_events,
+    events_by_ticker,
+)
 
 __all__ = [
     "WebullData",
@@ -34,4 +39,7 @@ __all__ = [
     "RecorderAnalyzer",
     "render_report",
     "render_report_lwc",
+    "Item202Event",
+    "load_item_202_events",
+    "events_by_ticker",
 ]
