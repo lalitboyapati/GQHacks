@@ -132,22 +132,28 @@ class Item202StrategySmokeTest(unittest.TestCase):
             cerebro.adddata(data)
             cerebro.addstrategy(
                 Item202OptionsImpactStrategy,
-                hold_bars=3,
                 atr_period=5,
                 min_gap_atr=0.1,
-                mode="momentum",
-                allow_short=True,
-                target_pct=0.5,
+                min_gap_pct=0.001,
+                premium_pct=0.02,
+                take_profit=0.60,
+                stop_loss=0.40,
+                max_hold_bars=5,
+                min_hold_bars=1,
+                dead_money_atr=0.01,
                 events_cache=str(cache),
                 enrich_benzinga=False,
+                enrich_disclosures=False,
             )
             cerebro.broker.setcash(100_000.0)
             results = cerebro.run(runonce=False)
             strat = results[0]
 
         self.assertGreaterEqual(len(strat.event_log), 1)
-        self.assertEqual(strat.event_log[0]["action"], "long")
-        self.assertGreater(len(strat.closed_trades) + int(bool(strat.position)), 0)
+        self.assertEqual(strat.event_log[0]["action"], "buy_call")
+        self.assertGreaterEqual(len(strat.option_trades) + sum(
+            1 for p in strat.option_positions.values() if p is not None
+        ), 1)
 
 
 if __name__ == "__main__":

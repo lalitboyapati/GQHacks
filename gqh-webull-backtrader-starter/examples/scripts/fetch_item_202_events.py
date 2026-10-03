@@ -59,17 +59,19 @@ def main() -> None:
         cache_path=None,
         refresh=True,
         enrich_benzinga=bool(args.benzinga),
+        enrich_disclosures=True,
     )
     path = save_events_cache(events, args.out)
     logger.info("Cached %d Item 2.02 event(s) -> %s", len(events), path)
     for event in events:
         logger.info(
-            "  %s filing=%s trade=%s session=%s surprise=%s",
+            "  %s filing=%s trade=%s primary=%s tertiary=%s polarity=%s",
             event.ticker,
             event.filing_date,
             event.trade_date,
-            event.session or "n/a",
-            event.eps_surprise_percent,
+            event.primary_category or "n/a",
+            event.tertiary_category or "n/a",
+            event.category_polarity,
         )
 
 

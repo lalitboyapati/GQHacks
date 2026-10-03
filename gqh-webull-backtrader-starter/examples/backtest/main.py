@@ -212,6 +212,15 @@ def _compute_metrics(
     win_rate = (won / total_trades * 100.0) if total_trades else 0.0
     net_pnl = trades.get("pnl", {}).get("net", {}).get("total", 0.0)
 
+    # Options strategies settle via cash marks, not BT equity orders.
+    option_trades = getattr(strat, "option_trades", None) or []
+    if option_trades and not total_trades:
+        total_trades = len(option_trades)
+        won = sum(1 for t in option_trades if t.get("pnl", 0) > 0)
+        lost = sum(1 for t in option_trades if t.get("pnl", 0) <= 0)
+        win_rate = (won / total_trades * 100.0) if total_trades else 0.0
+        net_pnl = sum(float(t.get("pnl", 0.0)) for t in option_trades)
+
     return {
         "starting_value": starting_value,
         "final_value": final_value,
@@ -258,16 +267,19 @@ def _print_results(strat: bt.Strategy, metrics: dict) -> None:
     logger.info("=" * 60)
 
     closed_trades = getattr(strat, "closed_trades", [])
+    if not closed_trades:
+        closed_trades = getattr(strat, "option_trades", [])
     if closed_trades:
         logger.info("[Backtest] Trade-by-trade detail (%d closed trade(s)):", len(closed_trades))
         for i, t in enumerate(closed_trades, start=1):
             logger.info(
                 "  #%d %s %s size=%s entry=%.2f@%s exit=%.2f@%s "
-                "pnl=%.2f pnlcomm=%.2f commission=%.2f bars=%d",
+                "pnl=%.2f pnlcomm=%.2f commission=%.2f bars=%d%s",
                 i, t["symbol"], t["direction"], t["size"],
                 t["entry_price"], t["open_dt"],
                 t["exit_price"], t["close_dt"],
                 t["pnl"], t["pnlcomm"], t["commission"], t["bars_held"],
+                f" reason={t['reason']}" if t.get("reason") else "",
             )
         logger.info("=" * 60)
 

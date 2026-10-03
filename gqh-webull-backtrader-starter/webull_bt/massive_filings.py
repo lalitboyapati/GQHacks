@@ -48,6 +48,13 @@ class Item202Event:
     estimated_eps: float | None = None
     actual_eps: float | None = None
     importance: int | None = None
+    # Massive 8-K disclosure taxonomy (primary/secondary/tertiary).
+    primary_category: str | None = None
+    secondary_category: str | None = None
+    tertiary_category: str | None = None
+    supporting_text: str | None = None
+    # +1 positive (calls), -1 negative (puts), 0 unsigned / gap-driven.
+    category_polarity: int = 0
     source: str = "8k_text"
     extras: dict = field(default_factory=dict)
 
@@ -67,6 +74,8 @@ class Item202Event:
         extras = filtered.pop("extras", {}) or {}
         unknown = {k: v for k, v in payload.items() if k not in known}
         extras = {**extras, **unknown}
+        if "category_polarity" in filtered and filtered["category_polarity"] is not None:
+            filtered["category_polarity"] = int(filtered["category_polarity"])
         return cls(**filtered, extras=extras)
 
 
@@ -109,12 +118,201 @@ def resolve_trade_date(filing_date: str, session: str | None) -> str:
 
 
 def _get_api_key() -> str | None:
+    """Massive only needs a single app/API key (no secret)."""
     return (
-        os.environ.get("MASSIVE_API_KEY")
+        os.environ.get("MASSIVE_APP_KEY")
+        or os.environ.get("MASSIVE_API_KEY")
         or os.environ.get("POLYGON_API_KEY")
         or os.environ.get("POLYGON_KEY")
         or ""
     ).strip() or None
+
+
+def fetch_8k_disclosures(
+    tickers: Iterable[str],
+    *,
+    filing_date_gte: str | None = None,
+    filing_date_lte: str | None = None,
+    api_key: str | None = None,
+    limit: int = 1000,
+) -> list[dict]:
+    """Fetch Massive categorized 8-K disclosures (primary/secondary/tertiary)."""
+    key = api_key or _get_api_key()
+    if not key:
+        return []
+
+    from massive import RESTClient
+
+    client = RESTClient(api_key=key)
+    rows: list[dict] = []
+    ticker_list = sorted({t.strip().upper() for t in tickers if t and t.strip()})
+    # API accepts tickers.any_of as a comma list; chunk to stay within URL limits.
+    chunk_size = 8
+    for i in range(0, len(ticker_list), chunk_size):
+        chunk = ticker_list[i : i + chunk_size]
+        params: dict = {
+            "tickers.any_of": ",".join(chunk),
+            "limit": limit,
+            "sort": "filing_date.asc",
+        }
+        if filing_date_gte:
+            params["filing_date.gte"] = filing_date_gte
+        if filing_date_lte:
+            params["filing_date.lte"] = filing_date_lte
+        try:
+            resp = client._get("/stocks/filings/8-K/vX/disclosures", params)
+        except Exception as exc:
+            logger.warning("[Massive] disclosures unavailable (%s)", exc)
+            return rows
+        if not isinstance(resp, dict):
+            continue
+        for item in resp.get("results") or []:
+            rows.append(item)
+        # Follow a single next_url page if present (enough for backtests).
+        next_url = resp.get("next_url")
+        pages = 0
+        while next_url and pages < 5:
+            pages += 1
+            try:
+                # next_url is absolute; client._get wants a path — use requests via client
+                from urllib.parse import urlparse, parse_qs
+
+                parsed = urlparse(next_url)
+                q = {k: v[0] for k, v in parse_qs(parsed.query).items()}
+                resp = client._get(parsed.path, q)
+            except Exception as exc:
+                logger.warning("[Massive] disclosures pagination stopped (%s)", exc)
+                break
+            if not isinstance(resp, dict):
+                break
+            for item in resp.get("results") or []:
+                rows.append(item)
+            next_url = resp.get("next_url")
+    logger.info("[Massive] fetched %d disclosure row(s)", len(rows))
+    return rows
+
+
+def enrich_with_disclosures(
+    events: list[Item202Event],
+    disclosures: list[dict],
+    *,
+    match_window_days: int = 2,
+) -> list[Item202Event]:
+    """Attach Massive disclosure taxonomy + category polarity to Item 2.02 events."""
+    from webull_bt.disclosure_polarity import category_polarity
+
+    by_ticker: dict[str, list[dict]] = {}
+    for row in disclosures:
+        tickers = row.get("tickers") or []
+        if isinstance(tickers, str):
+            tickers = [tickers]
+        for t in tickers:
+            by_ticker.setdefault(str(t).upper(), []).append(row)
+
+    # Prefer earnings-related disclosures when several share a filing date.
+    def _score(row: dict) -> int:
+        primary = (row.get("primary_category") or "").lower()
+        tertiary = (row.get("tertiary_category") or "").lower()
+        score = 0
+        if primary == "financial_results":
+            score += 100
+        if tertiary in {
+            "quarterly_earnings", "annual_earnings", "preliminary_results",
+            "guidance_issuance_or_update", "guidance_withdrawal",
+            "goodwill_impairment", "asset_impairment", "financial_restatement",
+            "material_charge_or_gain",
+        }:
+            score += 50
+        # Signed risk / leadership / deal categories still matter when present.
+        pol = category_polarity(primary, tertiary)
+        score += abs(pol) * 20
+        # Deprioritize routine IR presentations co-filed on earnings day.
+        if tertiary in {"investor_presentation", "annual_meeting_results"}:
+            score -= 80
+        return score
+
+    enriched: list[Item202Event] = []
+    for event in events:
+        candidates = by_ticker.get(event.ticker, [])
+        filing = date.fromisoformat(event.filing_date)
+        matched = []
+        for row in candidates:
+            try:
+                d = date.fromisoformat(str(row.get("filing_date"))[:10])
+            except (TypeError, ValueError):
+                continue
+            if abs((d - filing).days) <= match_window_days:
+                # Prefer same accession when available.
+                if (
+                    event.accession_number
+                    and row.get("accession_number")
+                    and row.get("accession_number") != event.accession_number
+                ):
+                    # Still allow, but lower priority via score only when dates match.
+                    pass
+                matched.append(row)
+        best = max(matched, key=_score) if matched else None
+        if not best:
+            # Item 2.02 without a taxonomy hit → treat as unsigned financial_results.
+            enriched.append(
+                Item202Event(
+                    ticker=event.ticker,
+                    filing_date=event.filing_date,
+                    accession_number=event.accession_number,
+                    filing_url=event.filing_url,
+                    form_type=event.form_type,
+                    trade_date=event.trade_date,
+                    session=event.session,
+                    eps_surprise_percent=event.eps_surprise_percent,
+                    revenue_surprise_percent=event.revenue_surprise_percent,
+                    estimated_eps=event.estimated_eps,
+                    actual_eps=event.actual_eps,
+                    importance=event.importance,
+                    primary_category="financial_results",
+                    secondary_category="earnings_and_performance",
+                    tertiary_category="quarterly_earnings",
+                    supporting_text=None,
+                    category_polarity=0,
+                    source=event.source,
+                    extras=event.extras,
+                )
+            )
+            continue
+        primary = best.get("primary_category")
+        secondary = best.get("secondary_category")
+        tertiary = best.get("tertiary_category")
+        # If best match is a weak IR tag, still force financial_results for Item 2.02.
+        if (tertiary or "").lower() in {"investor_presentation", "annual_meeting_results"}:
+            primary = "financial_results"
+            secondary = "earnings_and_performance"
+            tertiary = "quarterly_earnings"
+        enriched.append(
+            Item202Event(
+                ticker=event.ticker,
+                filing_date=event.filing_date,
+                accession_number=event.accession_number or best.get("accession_number"),
+                filing_url=event.filing_url or best.get("filing_url"),
+                form_type=event.form_type,
+                trade_date=event.trade_date,
+                session=event.session,
+                eps_surprise_percent=event.eps_surprise_percent,
+                revenue_surprise_percent=event.revenue_surprise_percent,
+                estimated_eps=event.estimated_eps,
+                actual_eps=event.actual_eps,
+                importance=event.importance,
+                primary_category=primary,
+                secondary_category=secondary,
+                tertiary_category=tertiary,
+                supporting_text=best.get("supporting_text"),
+                category_polarity=category_polarity(primary, tertiary),
+                source=event.source if "disclosure" in event.source else f"{event.source}+disclosure",
+                extras={
+                    **event.extras,
+                    "disclosure_accession": best.get("accession_number"),
+                },
+            )
+        )
+    return enriched
 
 
 def fetch_item_202_filings(
@@ -339,12 +537,13 @@ def load_item_202_events(
     cache_path: str | Path | None = None,
     refresh: bool = False,
     enrich_benzinga: bool = False,
+    enrich_disclosures: bool = True,
 ) -> list[Item202Event]:
     """Load Item 2.02 events from cache or Massive API.
 
     Resolution order:
       1. Existing ``cache_path`` (unless ``refresh``).
-      2. Live Massive 8-K Item 2.02 pull (+ optional Benzinga enrichment),
+      2. Live Massive 8-K Item 2.02 pull (+ optional Benzinga / disclosures),
          then write cache when ``cache_path`` is set.
     """
     tickers_list = [t.strip().upper() for t in tickers if t and str(t).strip()]
@@ -374,6 +573,14 @@ def load_item_202_events(
         )
         if earnings:
             events = enrich_with_benzinga(events, earnings)
+    if enrich_disclosures:
+        disclosures = fetch_8k_disclosures(
+            tickers_list,
+            filing_date_gte=filing_date_gte,
+            filing_date_lte=filing_date_lte,
+        )
+        if disclosures:
+            events = enrich_with_disclosures(events, disclosures)
 
     if cache:
         save_events_cache(events, cache)
