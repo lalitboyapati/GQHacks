@@ -38,6 +38,7 @@ class WebullPriceClient:
                 raise RuntimeError("Set WEBULL_APP_KEY and WEBULL_APP_SECRET in infrastructure/backtest/.env")
             # SDK errors can log signed request headers. Keep those out of reports.
             logging.getLogger("webull").setLevel(logging.CRITICAL)
+            logging.getLogger("webull.core.client").disabled = True
             from webull.core.client import ApiClient
             from webull.data.data_client import DataClient
             region = os.getenv("WEBULL_REGION_ID", "us")
@@ -75,7 +76,13 @@ class WebullPriceClient:
                     raise RuntimeError(f"Webull offline cache miss: {ticker} {cursor}..{stop}")
                 try:
                     response = self._client().market_data.get_history_bar(**request)
-                except Exception:
+                except Exception as exc:
+                    status = getattr(exc, "http_status", None)
+                    if status == 401:
+                        raise RuntimeError(
+                            "Webull authentication rejected (HTTP 401). Verify the matching "
+                            "App Key/App Secret and sandbox versus production endpoint."
+                        ) from None
                     raise RuntimeError(f"Webull request failed for {ticker}; check credentials, network and entitlement") from None
                 if response.status_code != 200:
                     raise RuntimeError(f"Webull HTTP {response.status_code} for {ticker}; check OpenAPI data entitlement")
