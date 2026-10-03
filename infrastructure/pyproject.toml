@@ -29,4 +29,4 @@ build-backend = "setuptools.build_meta"
 packages = ["webull_bt", "eightk"]
 
 [tool.pytest.ini_options]
-testpaths = ["../tracks/disclosure_advantage/tests"]
+testpaths = ["../tracks/disclosure_advantage/tests", "../tracks/item_202_results_ops/tests", "tests/test_webull_prices.py"]

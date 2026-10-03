@@ -6,7 +6,7 @@ Examples
     python scripts/run_backtest.py                        # all strategies
     python scripts/run_backtest.py --hold 5 --hold 10 --hold 21
     python scripts/run_backtest.py --strategies exec_put,stock_short
-    python scripts/run_backtest.py --max-cap 10e9 --no-earnings-confound
+    python scripts/run_backtest.py --max-cap 10e9
 """
 
 from __future__ import annotations
@@ -14,6 +14,7 @@ from __future__ import annotations
 import argparse
 import json
 import logging
+import hashlib
 import os
 import sys
 from pathlib import Path
@@ -113,6 +114,8 @@ def _rebuild_events(path: Path) -> list[EventRecord]:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("--price-source", choices=["massive", "webull"], default="massive")
+    parser.add_argument("--offline", action="store_true", help="Require cached price responses")
     parser.add_argument("--events", default=None, help="Path to the events JSON")
     parser.add_argument("--hold", action="append", type=int, default=None,
                         help="Holding period in sessions; repeat to sweep")
@@ -144,7 +147,10 @@ def main() -> int:
     settings = Settings.from_env()
     settings.ensure_dirs()
 
-    events_path = Path(args.events) if args.events else settings.events_dir / "events.json"
+    default_events = settings.events_dir / "events.json"
+    if not default_events.exists():
+        default_events = settings.events_dir / "universe_events_wide.json"
+    events_path = Path(args.events) if args.events else default_events
     if not events_path.exists():
         print(f"No event file at {events_path}. Run scripts/fetch_events.py first.")
         return 1
@@ -152,12 +158,19 @@ def main() -> int:
     events = _rebuild_events(events_path)
     log.info("loaded %d events from %s", len(events), events_path)
 
-    if not settings.has_massive:
-        print("MASSIVE_API_KEY is required for prices and option chains. "
-              "Add it to .env and re-run.")
-        return 1
-    massive = MassiveClient(settings.massive_api_key, settings.cache_dir,
-                            offline=settings.offline)
+    if args.price_source == "webull":
+        from eightk.webull_src import WebullPriceClient
+        massive = WebullPriceClient(settings.cache_dir, offline=args.offline or settings.offline)
+        if not massive.offline and not (settings.webull_app_key and settings.webull_app_secret):
+            print("Set WEBULL_APP_KEY and WEBULL_APP_SECRET in infrastructure/backtest/.env")
+            return 1
+        log.warning("Webull adjusted underlyings + MODELED options; no historical option fills")
+    else:
+        if not settings.has_massive and not (args.offline or settings.offline):
+            print("MASSIVE_API_KEY is required for prices and option chains.")
+            return 1
+        massive = MassiveClient(settings.massive_api_key, settings.cache_dir,
+                                offline=args.offline or settings.offline)
 
     strategy_config = StrategyConfig(
         min_days_to_expiry=args.min_dte,
@@ -175,8 +188,13 @@ def main() -> int:
             return 1
 
     holds = args.hold or [5, 10, 21]
+    if any(h <= 0 for h in holds) or args.notional <= 0 or args.spread_pct < 0:
+        parser.error("Holding periods and notional must be positive; spread must be nonnegative")
+    if not 0 < args.min_dte <= args.max_dte:
+        parser.error("Require 0 < min-dte <= max-dte")
     import pandas as pd
     all_frames = []
+    selection_counts = []
 
     for hold in holds:
         config = BacktestConfig(
@@ -186,12 +204,23 @@ def main() -> int:
             strategy_config=strategy_config,
         )
         log.info("=== holding period: %d sessions ===", hold)
-        trades = run_backtest(events, strategies, massive=massive, config=config)
+        try:
+            trades = run_backtest(events, strategies, massive=massive, config=config,
+                                  fail_fast=args.price_source == "webull")
+        except (RuntimeError, ValueError) as exc:
+            print(f"Backtest stopped: {exc}")
+            return 1
+        for strategy in strategies:
+            eligible = sum(bool(strategy.applies(event)[0]) for event in events)
+            completed = sum(trade.strategy == strategy.name for trade in trades)
+            selection_counts.append(dict(strategy=strategy.name, hold=hold, eligible=eligible,
+                                         completed=completed, excluded=eligible-completed))
         if not trades:
             log.warning("no trades at hold=%d", hold)
             continue
         frame = trades_frame(trades)
         frame["hold"] = hold
+        frame["price_source"] = args.price_source
         all_frames.append(frame)
 
         print()
@@ -202,7 +231,7 @@ def main() -> int:
         return 1
 
     combined = pd.concat(all_frames, ignore_index=True)
-    prefix = Path(args.out_prefix) if args.out_prefix else settings.results_dir / "backtest"
+    prefix = Path(args.out_prefix) if args.out_prefix else settings.results_dir / f"{args.price_source}_backtest"
     prefix.parent.mkdir(parents=True, exist_ok=True)
     trades_csv = prefix.with_name(prefix.name + "_trades.csv")
     summary_csv = prefix.with_name(prefix.name + "_summary.csv")
@@ -215,6 +244,18 @@ def main() -> int:
         summaries.append(table)
     pd.concat(summaries, ignore_index=True).to_csv(summary_csv, index=False)
 
+    manifest = {
+        "price_source": args.price_source,
+        "option_pricing": "model" if args.price_source == "webull" else "market_with_model_fallback",
+        "events_sha256": hashlib.sha256(events_path.read_bytes()).hexdigest(),
+        "arguments": vars(args), "trades": len(combined),
+        "coverage": getattr(massive, "coverage", []),
+        "selection_counts": selection_counts,
+        "limitations": ["Independent event studies, not a capital-constrained portfolio",
+                        "No untouched out-of-sample claim; holding-period sweep is exploratory",
+                        "Webull daily bars are forward-adjusted; model strikes are synthetic"],
+    }
+    prefix.with_name(prefix.name + "_manifest.json").write_text(json.dumps(manifest, indent=2))
     print(f"\nWrote {len(combined)} trades to {trades_csv}")
     print(f"Wrote per-strategy summary to {summary_csv}")
     return 0
