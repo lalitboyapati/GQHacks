@@ -141,9 +141,7 @@ def _locate_price_records(payload) -> list:
         for item in payload:
             if isinstance(item, dict) and isinstance(item.get("result"), list):
                 records.extend(item["result"])
-        if records:
-            return records
-        return payload
+        return records
 
     # Shape 1: {"result": [...]}
     if isinstance(payload, dict):

@@ -228,6 +228,11 @@ def simulate_trade(
     if entry is None:
         return None
     entry_day, entry_spot, reference_spot, timing_note = entry
+    # Limited vendor history must not move an old filing to a recent session.
+    if (entry_day - date.fromisoformat(event.filing.filing_date)).days > 7:
+        return None
+    if len(series.closes_before(entry_day, config.vol_window + 1)) < config.vol_window + 1:
+        return None
 
     baseline_vol = book.baseline_vol(entry_day, window=config.vol_window)
 
@@ -258,8 +263,7 @@ def simulate_trade(
     # --- exit ----------------------------------------------------------
     horizon_day = series.shift(entry_day, config.hold_sessions)
     if horizon_day is None:
-        horizon_day = series.days[-1] if series.days else None
-    if horizon_day is None:
+        # An unfinished observation is not a completed holding-period return.
         return None
     exit_day = horizon_day
     settled = False
@@ -376,6 +380,7 @@ def run_backtest(
     config: BacktestConfig | None = None,
     date_gte: str | None = None,
     date_lte: str | None = None,
+    fail_fast: bool = False,
 ) -> list[Trade]:
     """Run every strategy over every qualifying event."""
     cfg = config or BacktestConfig()
@@ -393,6 +398,8 @@ def run_backtest(
             from eightk.prices import load_series
             series = load_series(massive, ticker, start, end)
         except Exception:
+            if fail_fast:
+                raise
             logger.warning("price load failed for %s", ticker, exc_info=True)
             continue
         if len(series) < cfg.vol_window + 5:
@@ -415,6 +422,8 @@ def run_backtest(
                         book=book, config=cfg, reason=reason,
                     )
                 except Exception:
+                    if fail_fast:
+                        raise
                     logger.warning(
                         "simulate failed: %s %s %s",
                         strategy.name, ticker, event.filing.accession, exc_info=True,

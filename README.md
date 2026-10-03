@@ -41,6 +41,12 @@ Each **track** owns:
 - `strategy.py` — Backtrader `STRATEGY_CLASS` **or** a stub that points at the event-study runner
 - optional `scripts/`, `data/`, `tests/`, track-local `.env`
 
+## Webull backtesting
+
+See [WEBULL_BACKTEST.md](./WEBULL_BACKTEST.md) for account setup, commands for both
+active engines, cached replay, and the distinction between Webull stock history
+and modeled options. Real-data execution requires your Webull OpenAPI credentials.
+
 ## Quickstart
 
 ```bash

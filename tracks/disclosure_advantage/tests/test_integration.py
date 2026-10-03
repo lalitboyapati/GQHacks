@@ -299,3 +299,55 @@ class TestEndToEnd:
         assert {"strategy", "n_trades", "mean_return", "hit_rate"} <= set(table.columns)
         vrp = volatility_premium_table(frame)
         assert "mean_gap" in vrp.columns
+
+
+class TestHistoryCoverage:
+    def test_unfinished_horizon_is_excluded(self):
+        source = FakeMassive()
+        source.days = [d for d in source.days if d <= EVENT_DAY + timedelta(days=2)]
+        event = make_event(["exec_departure"], exec_change=SENIOR_DEPARTURE)
+        strategies = [s for s in default_strategies() if s.name == "exec_put"]
+        assert run_backtest([event], strategies, massive=source,
+                            config=BacktestConfig(hold_sessions=10)) == []
+
+    def test_old_filing_cannot_enter_at_start_of_recent_history(self):
+        source = FakeMassive()
+        source.days = [d for d in source.days if d > EVENT_DAY + timedelta(days=30)]
+        event = make_event(["exec_departure"], exec_change=SENIOR_DEPARTURE)
+        strategies = [s for s in default_strategies() if s.name == "exec_put"]
+        assert run_backtest([event], strategies, massive=source) == []
+
+    def test_webull_failure_is_not_silently_dropped(self):
+        class BrokenSource:
+            def daily_bars(self, *args, **kwargs):
+                raise RuntimeError("No entitlement")
+        event = make_event(["exec_departure"], exec_change=SENIOR_DEPARTURE)
+        with pytest.raises(RuntimeError, match="No entitlement"):
+            run_backtest([event], default_strategies(), massive=BrokenSource(), fail_fast=True)
+
+    def test_webull_adapter_to_modeled_option_trade(self, tmp_path, monkeypatch):
+        from types import SimpleNamespace
+        from eightk.webull_src import WebullPriceClient
+        source = FakeMassive(post_event_drift=-0.02)
+
+        class FakeWebullAPI:
+            def get_history_bar(self, **kwargs):
+                start = datetime.fromtimestamp(kwargs['start_time']/1000, timezone.utc).date()
+                end = datetime.fromtimestamp(kwargs['end_time']/1000, timezone.utc).date()
+                bars = source.daily_bars('TEST', str(start), str(end))
+                rows = [dict(time=f'{b.day}T00:00:00+0000', open=b.open, high=b.high,
+                             low=b.low, close=b.close, volume=b.volume) for b in bars]
+                return SimpleNamespace(status_code=200, json=lambda: rows)
+
+        monkeypatch.setattr('eightk.webull_src.time.sleep', lambda _: None)
+        client = WebullPriceClient(tmp_path, client=SimpleNamespace(market_data=FakeWebullAPI()))
+        event = make_event(["exec_departure"], exec_change=SENIOR_DEPARTURE)
+        strategies = [s for s in default_strategies() if s.name == "exec_put"]
+        trades = run_backtest([event], strategies, massive=client,
+                              config=BacktestConfig(hold_sessions=5), fail_fast=True)
+        assert len(trades) == 1
+        assert trades[0].priced_from == 'model'
+        assert trades[0].pnl > 0
+        replay = WebullPriceClient(tmp_path, offline=True)
+        assert run_backtest([event], strategies, massive=replay,
+                            config=BacktestConfig(hold_sessions=5), fail_fast=True) == trades

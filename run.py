@@ -109,6 +109,16 @@ def _run_event_track(track: str, argv_rest: list[str]) -> None:
 
 
 def main() -> None:
+    # Dispatch event flags before the Backtrader positional symbol can consume
+    # values such as the path following --events.
+    dispatch = argparse.ArgumentParser(add_help=False)
+    dispatch.add_argument("--track")
+    dispatch.add_argument("--engine")
+    selected, event_args = dispatch.parse_known_args()
+    is_event = selected.track and (selected.engine or _track_engine(selected.track)) == "event"
+    if is_event and "--list-tracks" not in event_args:
+        _run_event_track(selected.track, event_args)
+        return
     parser = argparse.ArgumentParser(
         description="Run a shared backtest for a research track or demo strategy.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,

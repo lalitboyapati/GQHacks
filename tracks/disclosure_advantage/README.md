@@ -132,6 +132,12 @@ the "dramatic exit" subsample is small by construction, not by filtering.
   uses filing text and EDGAR report-lag only; prior-coverage evidence is the
   strongest of its four signals and needs the key.
 
+## Webull alternative
+
+Run the same disclosure strategies on Webull underlyings with explicitly modeled
+options using `--price-source webull`. See [the setup and run guide](../../WEBULL_BACKTEST.md).
+The default remains Massive.
+
 ## Setup
 
 ```bash
