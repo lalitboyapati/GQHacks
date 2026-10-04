@@ -10,6 +10,27 @@ locked out-of-sample window were committed before any data was pulled: see [`HYP
 yet covered, predict the stock's move over the next few sessions. We buy the stock after bullish whale
 flow and short it after bearish flow, hold 5 sessions, and hedge the biotech beta with XBI.
 
+## Headline results (net of costs; reproduced by `run_all.py`)
+
+Locked plan = everything in `HYPOTHESIS.md` + `DEVIATIONS.md`: risk-scaled sizing, XBI hedge, options tail hedge,
+−15% stop, drawdown de-risking, 20 bps/side, 5% borrow. In-sample 2024-01-02 → 2026-03-13; out-of-sample
+2026-03-16 → 2026-10-02, **run once** (`results/OOS_LOCK.json`).
+
+| | In-sample Sharpe | ann. return | max DD | Out-of-sample Sharpe | ann. return | max DD |
+|---|---|---|---|---|---|---|
+| **Locked plan** | **−0.56** | −11.5% | −27.8% | **−0.76** | −25.7% | −27.3% |
+| Locked plan, ×2 costs | −1.08 | −18.6% | −38.9% | −1.09 | −31.3% | −30.1% |
+| No options tail hedge | −0.14 | −4.7% | −22.1% | +0.70 | +18.8% | −15.1% |
+| No hedges at all | −0.07 | −3.6% | −20.5% | +1.46 | +50.8% | −13.1% |
+
+The whale signal itself: direction-signed stock move over 5 sessions, traded days, **+1.06% [−0.01, +2.32] in-sample
+(n = 593)** and **+2.54% [−0.38, +5.98] out-of-sample (n = 173)**. The pre-registered plan fails out-of-sample
+because the options tail hedge costs a median 4.4% of each position (biotech implied volatility is extreme before
+catalysts). The hedge-free variants were declared before the out-of-sample run, but choosing them after seeing it would be
+tuning on the test set; they are reported, not adopted. Full tables: `results/{is,oos}_metrics.csv`, `_summary.json`,
+`_decay.csv`, `_capacity.csv`; equity curves `results/{is,oos}_equity.png`; every configuration run:
+`results/variants_log.csv`.
+
 ## Data, one role per vendor
 
 | Vendor | Used for | Where |
@@ -18,9 +39,9 @@ flow and short it after bearish flow, hold 5 sessions, and hedge the biotech bet
 | **Databento** | OPRA `tcbbo`: every option trade with the consolidated best bid/offer at that moment, used to **sign whale prints** (bought vs sold) on flagged days only | `whales.py` (spend-capped, priced before every purchase) |
 | **Webull** | Daily stock and XBI bars: **the only prices the backtest trades on** (backtrader) | `backtest.py` |
 
-Raw vendor data is cached under `data/cache/` and never committed. Derived tables (`universe.csv`,
-`whale_days.csv`, `news.csv`, `signals.csv`) are committed so the backtest can be reproduced with
-Webull keys alone.
+Raw vendor data is cached under `data/cache/` and never committed. Derived tables (`universe.csv`, `spike_days.csv`,
+`whale_days.csv`, `news.csv`, `signals.csv`) are committed, so the backtest can be reproduced without Databento:
+Webull keys for the stock bars and a Massive key for the option prices behind the tail hedge.
 
 ## Reproduce
 
@@ -31,8 +52,8 @@ uv pip install -r tracks/whale_footprints/requirements.txt    # or pip install -
 cp tracks/whale_footprints/.env.example infrastructure/backtest/.env   # then fill in your keys
 
 cd tracks/whale_footprints
-python run_all.py --from-signals          # backtest from the committed signals: needs Webull keys only
-python run_all.py --from-signals --oos    # the locked out-of-sample run (reproduces the same spec only)
+python run_all.py --from-signals          # in-sample, from the committed signals: needs Webull + Massive keys
+python run_all.py --from-signals --oos    # the locked out-of-sample run (re-runs only the same spec)
 
 python run_all.py                          # full pipeline (Massive + Databento + Webull); data stages are cached
 ```

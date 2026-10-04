@@ -32,6 +32,11 @@ OOS_LOCK = R / "OOS_LOCK.json"
 
 
 def log_variant(name: str, period: str, m: dict, spec: dict):
+    """Append a tested configuration, once: reproducing a logged run does not count as a new trial."""
+    if VARIANT_LOG.exists():
+        seen = pd.read_csv(VARIANT_LOG)
+        if ((seen.variant == name) & (seen.period == period)).any():
+            return
     row = {"logged_at": datetime.now(timezone.utc).isoformat(timespec="seconds"), "variant": name, "period": period,
            "spec": json.dumps(spec, sort_keys=True), **{k: m.get(k) for k in ("sharpe", "ann_return", "max_drawdown", "n_trades")}}
     pd.DataFrame([row]).to_csv(VARIANT_LOG, mode="a", header=not VARIANT_LOG.exists(), index=False)
