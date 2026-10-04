@@ -68,16 +68,35 @@ def day_features(trades: pd.DataFrame) -> dict:
     return out
 
 
+def candidates() -> pd.DataFrame:
+    """Stage-1 days sent to Databento: widest spike neighbour, contract floor, one-directional on volume, liquid,
+    then a seeded random DATABENTO_SAMPLE_FRACTION of them (the same draw for in- and out-of-sample)."""
+    s = pd.read_csv(config.DATA_DIR / "spike_days.csv")
+    st = pd.read_parquet(config.DATA_DIR / "stock_daily.parquet").sort_values(["ticker", "date"])
+    st["date"] = pd.to_datetime(st["date"]).dt.strftime("%Y-%m-%d")
+    st["dv"] = st.close * st.volume
+    g = st.groupby("ticker")
+    st["dv20"] = g.dv.transform(lambda x: x.shift(1).rolling(20, min_periods=10).median())   # known before t
+    st["px"] = g.close.shift(1)
+    s = s.merge(st[["ticker", "date", "dv20", "px"]], on=["ticker", "date"], how="left")
+    share = s.sampled_call / (s.sampled_call + s.sampled_put)
+    m = ((s.spike_ratio >= min(config.GRID["SPIKE_MULT"])) & (s.sampled_volume >= config.SAMPLED_MIN_CONTRACTS)
+         & ((share >= config.STAGE1_CALL_SHARE_EXTREME) | (share <= 1 - config.STAGE1_CALL_SHARE_EXTREME))
+         & (s.px >= config.LIQ_MIN_PRICE) & (s.dv20 >= config.LIQ_MIN_DOLLAR_VOLUME))
+    pool = s[m].reset_index(drop=True)
+    rng = np.random.default_rng(config.DATABENTO_SAMPLE_SEED)
+    keep = rng.random(len(pool)) < config.DATABENTO_SAMPLE_FRACTION
+    print(f"stage-1 pool {len(pool)} name-days; random {config.DATABENTO_SAMPLE_FRACTION:.0%} sample keeps {int(keep.sum())}")
+    return pool[keep].reset_index(drop=True)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--quote-only", action="store_true", help="price the whole pass, buy nothing")
     ap.add_argument("--max-spend", type=float, default=config.DATABENTO_RUN_CAP)
     args = ap.parse_args()
 
-    spikes = pd.read_csv(config.DATA_DIR / "spike_days.csv")
-    # The widest grid neighbour, so every variant is covered by one purchase.
-    cand = spikes[(spikes.spike_ratio >= min(config.GRID["SPIKE_MULT"])) &
-                  (spikes.sampled_volume >= config.SAMPLED_MIN_CONTRACTS)].reset_index(drop=True)
+    cand = candidates()
     db = Databento(run_cap=args.max_spend)
     windows = [rth_window(d) for d in cand.date]
     with ThreadPoolExecutor(8) as ex:

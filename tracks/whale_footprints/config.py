@@ -19,7 +19,13 @@ OOS_START, OOS_END = "2026-03-16", "2026-10-02"          # most recent 20%: run 
 SPIKE_MULT = 3.0              # option volume ≥ 3× trailing median
 SPIKE_LOOKBACK = 20           # sessions
 SPIKE_MIN_CONTRACTS = 1_000    # full-chain contracts on t, counted from the Databento tape (stage 2)
-SAMPLED_MIN_CONTRACTS = 300    # stage-1 prefilter on the Massive sample, which undercounts the chain; sets Databento spend only
+# Stage-1 prefilters (Massive data, free). They only decide which days Databento is asked about; see DEVIATIONS.md.
+SAMPLED_MIN_CONTRACTS = 1_000  # the 1,000-contract floor applied to the Massive sample (undercounts the chain)
+STAGE1_CALL_SHARE_EXTREME = 0.75   # sampled call share ≥ 75% or ≤ 25%: a one-directional day on volume
+LIQ_MIN_PRICE = 3.0            # tradeable names only (also a trading rule)
+LIQ_MIN_DOLLAR_VOLUME = 5e6    # 20-day median stock dollar volume
+DATABENTO_SAMPLE_FRACTION = 0.30   # seeded random share of candidate days signed on Databento (budget)
+DATABENTO_SAMPLE_SEED = 20261003
 WHALE_MIN_PREMIUM = 50_000    # $ per print
 ONE_SIDED_MIN = 0.65          # dominant side's share of whale premium
 
@@ -54,4 +60,4 @@ GRID = {
 # ---- Databento spend control -------------------------------------------------------------------
 DATABENTO_TOTAL_BUDGET = 225.0
 DATABENTO_STUDY_CAP = 60.0    # this study may spend at most this much, in total
-DATABENTO_RUN_CAP = 15.0      # and at most this much per run
+DATABENTO_RUN_CAP = 50.0      # and at most this much per run (the whale pass: ~$45 approved)
