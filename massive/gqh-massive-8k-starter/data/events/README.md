@@ -1,6 +1,6 @@
-# Event artifacts (local to starter notebooks)
+# Events (legacy nested path)
 
-`disruption_events.json` — cleaned Massive 8-K + FIRMS-labeled facility disruption panel
-used by the physical-facility-disruption notebooks in the parent folder.
+Prefer `../../disruption_events.json` (same folder as the notebooks).
 
-How it was built / how to regenerate: see `../SETUP.md` §2.
+This folder is kept only as a fallback for older checkouts; notebooks now look for
+`disruption_events.json` next to the `.ipynb` first.

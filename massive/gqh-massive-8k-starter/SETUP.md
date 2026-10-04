@@ -22,15 +22,20 @@ There are **two independent pulls**. The notebook does **not** hit FIRMS on ever
 | Thermal persistence | NASA FIRMS area API | Labels written into events JSON |
 | Trade filter | `facility_group == brief` | In-notebook |
 
-**Local copy next to the notebooks (preferred at runtime):**
+**Hand-off layout (preferred — same folder as the notebook):**
 
-`massive/gqh-massive-8k-starter/data/events/disruption_events.json`
+```
+massive/gqh-massive-8k-starter/
+├── <notebook>.ipynb
+├── .env
+└── disruption_events.json
+```
 
-**Same file also kept under the track** (source pipeline / tests):
+**Also kept under the track** (source pipeline / tests):
 
 `tracks/physical_facility_disruption/data/events/disruption_events.json`
 
-Notebooks resolve events as: **local path if present, else track path**.
+Notebooks resolve events in order: **same-folder `disruption_events.json` → `data/events/` → track path**.
 
 Each row is roughly: ticker, filing date, disruption type, site lat/lon, FIRMS anomaly fields, and `facility_group` (`brief` / `persistent` / `unknown`).
 
@@ -95,21 +100,19 @@ uv run --project infrastructure python tracks/physical_facility_disruption/scrip
   --out tracks/physical_facility_disruption/data/events/disruption_events.json
 ```
 
-Then refresh the local starter copy used by the notebooks:
+Then refresh the copy that sits next to the notebooks:
 
 ```bash
 # from repo root
-mkdir -p massive/gqh-massive-8k-starter/data/events
 cp tracks/physical_facility_disruption/data/events/disruption_events.json \
-   massive/gqh-massive-8k-starter/data/events/disruption_events.json
+   massive/gqh-massive-8k-starter/disruption_events.json
 ```
 
 Windows PowerShell:
 
 ```powershell
-New-Item -ItemType Directory -Force -Path massive\gqh-massive-8k-starter\data\events | Out-Null
 Copy-Item tracks\physical_facility_disruption\data\events\disruption_events.json `
-  massive\gqh-massive-8k-starter\data\events\disruption_events.json -Force
+  massive\gqh-massive-8k-starter\disruption_events.json -Force
 ```
 
 **After a broader fetch**, re-apply text FP filters if you also broadened `massive_disruptions.py` (same `is_disruption_text` used at fetch time). Unit tests:
@@ -156,7 +159,7 @@ Keys (no quotes/spaces):
 - **FIRMS** — free map key: https://firms.modaps.eosdis.nasa.gov/api/map_key/
 
 Open the notebook, select kernel **Python (Gator Quant Hacks .venv)**, Run All.  
-Section 1 should print `API key loaded (ends xxxx)` and `Events path: .../gqh-massive-8k-starter/data/events/disruption_events.json`.
+Section 1 should print `API key loaded (ends xxxx)` and `Events path: .../gqh-massive-8k-starter/disruption_events.json`.
 
 ---
 
@@ -165,7 +168,7 @@ Section 1 should print `API key loaded (ends xxxx)` and `Events path: .../gqh-ma
 ### Reproduce the reported study (fastest)
 
 1. Leave `USE_CACHED_EVENTS = True`, `REFRESH_EVENTS = False`.
-2. Confirm local file exists: `data/events/disruption_events.json` (~45 events).
+2. Confirm local file exists: `disruption_events.json` next to the notebook (~45 events).
 3. Run All on `physical-facility-disruption-condor-plus-sweep.ipynb`.
 4. Check in-sample / OOS counts, drop reasons, scoreboard, placebo ranking, OOS sign table, cost haircut.
 
@@ -208,9 +211,9 @@ Delete `.massive_cache/` in this folder and Run All again.
 | Symptom | Fix |
 |---|---|
 | Prompted for API key | Fill `MASSIVE_API_KEY` in this folder’s `.env` |
-| `EVENTS_PATH ... exists=False` | Ensure `data/events/disruption_events.json` is present (or the track copy) |
+| `EVENTS_PATH ... exists=False` | Put `disruption_events.json` in the same folder as the notebook |
 | 0 priced events | Thin options / dates past last OPRA session; inspect drop-reason table |
-| Want FIRMS live | Re-run `fetch_disruption_events.py --firms`, then copy JSON into `data/events/` |
+| Want FIRMS live | Re-run `fetch_disruption_events.py --firms`, then copy JSON next to the notebook |
 | Slow iteration | `RUN_PLACEBO = False` while exploring |
 | Kernel / imports | Re-run setup; pick **Python (Gator Quant Hacks .venv)** |
 
