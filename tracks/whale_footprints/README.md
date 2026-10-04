@@ -25,8 +25,8 @@ Locked plan = everything in `HYPOTHESIS.md` + `DEVIATIONS.md`: risk-scaled sizin
 
 The whale signal itself: direction-signed stock move over 5 sessions, traded days, **+1.06% [−0.01, +2.32] in-sample
 (n = 593)** and **+2.54% [−0.38, +5.98] out-of-sample (n = 173)**. The pre-registered plan fails out-of-sample
-because the options tail hedge costs a median 4.4% of each position (biotech implied volatility is extreme before
-catalysts). The hedge-free variants were declared before the out-of-sample run, but choosing them after seeing it would be
+because the options tail hedge costs more than the edge: a median 4.4% of position up front (biotech implied
+volatility is extreme before catalysts), and a realised 0.85% (IS) / 2.27% (OOS) per hedged trade after resale at exit. The hedge-free variants were declared before the out-of-sample run, but choosing them after seeing it would be
 tuning on the test set; they are reported, not adopted. Full tables: `results/{is,oos}_metrics.csv`, `_summary.json`,
 `_decay.csv`, `_capacity.csv`; equity curves `results/{is,oos}_equity.png`; every configuration run:
 `results/variants_log.csv`.
@@ -56,7 +56,13 @@ python run_all.py --from-signals          # in-sample, from the committed signal
 python run_all.py --from-signals --oos    # the locked out-of-sample run (re-runs only the same spec)
 
 python run_all.py                          # full pipeline (Massive + Databento + Webull); data stages are cached
+
+python note_stats.py                       # post-hoc diagnostics quoted in the note -> results/note_stats.json
+python make_figures.py                     # figures/ for the note
+uv run --no-project --with markdown python render_note.py   # QUANT_NOTE.md -> quant_note.pdf (headless Chrome)
 ```
+
+The quant note is [`QUANT_NOTE.md`](QUANT_NOTE.md) / `quant_note.pdf` (5 pages + references and appendix).
 
 Outputs go to `results/`: `{is,oos}_metrics.csv` (baseline and every variant), `{is,oos}_summary.json`
 (headline numbers, factor regression, deflated Sharpe, news-status counts, symbols Webull lacks),
