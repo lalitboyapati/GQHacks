@@ -3,3 +3,4 @@ data/cache/
 *.dbn
 *.dbn.zst
 results/raw/
+*.log

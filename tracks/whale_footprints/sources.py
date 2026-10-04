@@ -104,12 +104,42 @@ class Databento:
     def cached(self, schema: str, parent: str, start: str, end: str) -> bool:
         return self._path(schema, parent, start, end).exists()
 
+    def _quotes(self) -> dict:
+        if not hasattr(self, "_quote_cache"):
+            p = self.cache / "quotes.json"
+            self._quote_cache = json.loads(p.read_text()) if p.exists() else {}
+            self._quote_dirty = 0
+        return self._quote_cache
+
+    def save_quotes(self):
+        with self._lock:
+            tmp = self.cache / "quotes.json.tmp"
+            tmp.write_text(json.dumps(self._quotes()))
+            tmp.replace(self.cache / "quotes.json")
+
     def quote(self, schema: str, parent: str, start: str, end: str) -> float:
-        """Free: what this request would cost."""
+        """Free: what this request would cost (cached on disk; retried on timeouts)."""
         if self.cached(schema, parent, start, end):
             return 0.0
-        return float(self.client.metadata.get_cost(dataset=self.DATASET, symbols=[parent], stype_in="parent",
-                                                   schema=schema, start=start, end=end))
+        key = f"{schema}|{parent}|{start}|{end}"
+        q = self._quotes()
+        if key in q:
+            return q[key]
+        for attempt in range(5):
+            try:
+                cost = float(self.client.metadata.get_cost(dataset=self.DATASET, symbols=[parent], stype_in="parent",
+                                                           schema=schema, start=start, end=end))
+                break
+            except Exception:
+                if attempt == 4:
+                    raise
+                time.sleep(2 ** attempt)
+        with self._lock:
+            q[key] = cost
+            self._quote_dirty += 1
+        if self._quote_dirty % 100 == 0:
+            self.save_quotes()
+        return cost
 
     def fetch(self, schema: str, parent: str, start: str, end: str) -> pd.DataFrame:
         path = self._path(schema, parent, start, end)
@@ -121,9 +151,16 @@ class Databento:
             self.ledger.check(cost + self._reserved, desc)
             self._reserved += cost
         try:
-            data = self.client.timeseries.get_range(dataset=self.DATASET, symbols=[parent], stype_in="parent",
-                                                    schema=schema, start=start, end=end)
-            frame = data.to_df()
+            for attempt in range(4):
+                try:
+                    data = self.client.timeseries.get_range(dataset=self.DATASET, symbols=[parent], stype_in="parent",
+                                                            schema=schema, start=start, end=end)
+                    frame = data.to_df()
+                    break
+                except Exception:
+                    if attempt == 3:
+                        raise
+                    time.sleep(5 * (attempt + 1))
             frame.to_parquet(path)                 # cache first, then record the spend
             with self._lock:
                 self.ledger.record(cost, desc, schema=schema, parent=parent)
@@ -151,6 +188,11 @@ class WebullBars:
             api = ApiClient(_key("WEBULL_APP_KEY"), _key("WEBULL_APP_SECRET"), region)
             api.add_endpoint(region, os.environ.get("WEBULL_API_ENDPOINT", "api.webull.com"))
             self._client = DataClient(api)
+            for name in ("webull", "webull.core", "webull.core.client"):
+                lg = logging.getLogger(name)
+                lg.handlers.clear()
+                lg.propagate = False
+                lg.disabled = True
             logging.disable(logging.NOTSET)
         return self._client
 
@@ -161,21 +203,26 @@ class WebullBars:
             payload = json.loads(path.read_text())
         else:
             ms = lambda s: int(datetime.fromisoformat(s).replace(tzinfo=timezone.utc).timestamp() * 1000)
-            logging.disable(logging.CRITICAL)
-            try:
-                r = self.client().market_data.get_batch_history_bar(
-                    symbols=[symbol], category="US_STOCK", timespan="D", count="1200", real_time_required=False,
-                    start_time=ms(start), end_time=ms(end) + 86_400_000 - 1)
-                payload = {"status": r.status_code, "body": r.json()}
-            except Exception as exc:                # unknown symbol is a 417 business error
-                payload = {"status": getattr(exc, "http_status", None), "error": str(getattr(exc, "error_msg", ""))[:200]}
-            finally:
-                logging.disable(logging.NOTSET)
+            client = self.client()                  # build first: client() re-enables logging when it finishes
+            for attempt in range(8):
+                logging.disable(logging.CRITICAL)   # the SDK logs full signed requests (incl. the app key) on errors
+                try:
+                    r = client.market_data.get_batch_history_bar(
+                        symbols=[symbol], category="US_STOCK", timespan="D", count="1200", real_time_required=False,
+                        start_time=ms(start), end_time=ms(end) + 86_400_000 - 1)
+                    payload = {"status": r.status_code, "body": r.json()}
+                except Exception as exc:            # unknown symbol is a 417 business error
+                    payload = {"status": getattr(exc, "http_status", None), "error": str(getattr(exc, "error_msg", ""))[:200]}
+                finally:
+                    logging.disable(logging.NOTSET)
+                if payload.get("status") != 429:
+                    break
+                time.sleep(min(2 ** attempt, 30))   # rate limited: back off and retry
             if payload.get("status") in (200, 417):
                 path.write_text(json.dumps(payload))
             else:
                 raise RuntimeError(f"Webull bars failed for {symbol}: {payload}")
-            time.sleep(0.15)
+            time.sleep(0.35)
         if payload.get("status") != 200:
             return None
         rows = (payload["body"].get("result") or [{}])[0].get("result") or []
