@@ -18,7 +18,8 @@ OOS_START, OOS_END = "2026-03-16", "2026-10-02"          # most recent 20%: run 
 # ---- Whale day ---------------------------------------------------------------------------------
 SPIKE_MULT = 3.0              # option volume ≥ 3× trailing median
 SPIKE_LOOKBACK = 20           # sessions
-SPIKE_MIN_CONTRACTS = 1_000
+SPIKE_MIN_CONTRACTS = 1_000    # full-chain contracts on t, counted from the Databento tape (stage 2)
+SAMPLED_MIN_CONTRACTS = 300    # stage-1 prefilter on the Massive sample, which undercounts the chain; sets Databento spend only
 WHALE_MIN_PREMIUM = 50_000    # $ per print
 ONE_SIDED_MIN = 0.65          # dominant side's share of whale premium
 
