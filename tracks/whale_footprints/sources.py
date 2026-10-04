@@ -104,12 +104,42 @@ class Databento:
     def cached(self, schema: str, parent: str, start: str, end: str) -> bool:
         return self._path(schema, parent, start, end).exists()
 
+    def _quotes(self) -> dict:
+        if not hasattr(self, "_quote_cache"):
+            p = self.cache / "quotes.json"
+            self._quote_cache = json.loads(p.read_text()) if p.exists() else {}
+            self._quote_dirty = 0
+        return self._quote_cache
+
+    def save_quotes(self):
+        with self._lock:
+            tmp = self.cache / "quotes.json.tmp"
+            tmp.write_text(json.dumps(self._quotes()))
+            tmp.replace(self.cache / "quotes.json")
+
     def quote(self, schema: str, parent: str, start: str, end: str) -> float:
-        """Free: what this request would cost."""
+        """Free: what this request would cost (cached on disk; retried on timeouts)."""
         if self.cached(schema, parent, start, end):
             return 0.0
-        return float(self.client.metadata.get_cost(dataset=self.DATASET, symbols=[parent], stype_in="parent",
-                                                   schema=schema, start=start, end=end))
+        key = f"{schema}|{parent}|{start}|{end}"
+        q = self._quotes()
+        if key in q:
+            return q[key]
+        for attempt in range(5):
+            try:
+                cost = float(self.client.metadata.get_cost(dataset=self.DATASET, symbols=[parent], stype_in="parent",
+                                                           schema=schema, start=start, end=end))
+                break
+            except Exception:
+                if attempt == 4:
+                    raise
+                time.sleep(2 ** attempt)
+        with self._lock:
+            q[key] = cost
+            self._quote_dirty += 1
+        if self._quote_dirty % 100 == 0:
+            self.save_quotes()
+        return cost
 
     def fetch(self, schema: str, parent: str, start: str, end: str) -> pd.DataFrame:
         path = self._path(schema, parent, start, end)

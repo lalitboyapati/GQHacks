@@ -43,6 +43,12 @@ DRAWDOWN_DERISK = -0.15       # halve sizes while below this from peak
 HEDGE_SYMBOL = "XBI"
 HEDGE = True
 
+# ---- Tail hedge (options, priced on real Massive option trades; see hedging.py and DEVIATIONS.md) ----
+TAIL_HEDGE = True             # protective put on longs, call on shorts
+TAIL_OTM = 0.10
+TAIL_DTE_MIN, TAIL_DTE_TARGET, TAIL_DTE_MAX = 14, 30, 60
+TAIL_SPREAD = 0.05            # fraction of premium paid per side on the option (×2 in the doubled-cost run)
+
 # ---- Costs -------------------------------------------------------------------------------------
 COST_BPS_STOCK = 20.0         # per side
 COST_BPS_HEDGE = 2.0
@@ -59,5 +65,5 @@ GRID = {
 
 # ---- Databento spend control -------------------------------------------------------------------
 DATABENTO_TOTAL_BUDGET = 225.0
-DATABENTO_STUDY_CAP = 60.0    # this study may spend at most this much, in total
-DATABENTO_RUN_CAP = 50.0      # and at most this much per run (the whale pass: ~$45 approved)
+DATABENTO_STUDY_CAP = 100.0   # this study may spend at most this much, in total (raised by the team from $60)
+DATABENTO_RUN_CAP = 100.0     # and at most this much per run

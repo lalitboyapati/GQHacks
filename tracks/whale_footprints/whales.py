@@ -44,7 +44,7 @@ def day_features(trades: pd.DataFrame) -> dict:
     """Signed premium totals for one name-day."""
     if trades.empty:
         return {"contracts": 0, "premium": 0.0}
-    t = trades[trades["size"] > 0].copy()
+    t = trades[trades["size"] > 0].reset_index(drop=True)      # Databento timestamps repeat; use positions
     t = pd.concat([t, parse_occ(t["symbol"])], axis=1)
     bid, ask, px = t["bid_px_00"], t["ask_px_00"], t["price"]
     mid = (bid + ask) / 2
@@ -62,7 +62,7 @@ def day_features(trades: pd.DataFrame) -> dict:
         out[f"whale_bear_{thr}"] = float(t.loc[w & bear, "premium"].sum())
         out[f"whale_n_{thr}"] = int((w & (bull | bear)).sum())
     # The single largest print, for the "which events" table.
-    big = t.loc[t["premium"].idxmax()]
+    big = t.iloc[int(t["premium"].to_numpy().argmax())]
     out.update(largest_print_premium=float(big["premium"]), largest_print_symbol=str(big["symbol"]).replace(" ", ""),
                largest_print_side="bought" if big["sign"] > 0 else "sold" if big["sign"] < 0 else "mid")
     return out
@@ -94,18 +94,28 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--quote-only", action="store_true", help="price the whole pass, buy nothing")
     ap.add_argument("--max-spend", type=float, default=config.DATABENTO_RUN_CAP)
+    ap.add_argument("--abort-above", type=float, default=None, help="buy nothing if the total quote exceeds this")
     args = ap.parse_args()
 
     cand = candidates()
     db = Databento(run_cap=args.max_spend)
     windows = [rth_window(d) for d in cand.date]
-    with ThreadPoolExecutor(8) as ex:
-        quotes = list(ex.map(lambda tw: db.quote("tcbbo", f"{tw[0]}.OPT", *tw[1]), zip(cand.ticker, windows)))
+    quotes, done = [], 0
+    with ThreadPoolExecutor(6) as ex:
+        for q in ex.map(lambda tw: db.quote("tcbbo", f"{tw[0]}.OPT", *tw[1]), zip(cand.ticker, windows)):
+            quotes.append(q)
+            done += 1
+            if done % 250 == 0:
+                print(f"  priced {done}/{len(cand)} days: ${sum(quotes):.2f} so far", flush=True)
+    db.save_quotes()
     cand["quote_usd"] = quotes
     todo = cand[cand.quote_usd > 0]
     print(f"{len(cand)} candidate name-days; {len(todo)} not cached; quoted ${todo.quote_usd.sum():.2f} "
           f"(ledger: {db.ledger.summary()}; this run may spend ${args.max_spend:.2f})")
     if args.quote_only:
+        return
+    if args.abort_above is not None and todo.quote_usd.sum() > args.abort_above:
+        print(f"ABORTED: quote ${todo.quote_usd.sum():.2f} is above the approved ${args.abort_above:.2f}; nothing bought")
         return
 
     if todo.quote_usd.sum() > db.ledger.run_remaining or todo.quote_usd.sum() > db.ledger.remaining:
