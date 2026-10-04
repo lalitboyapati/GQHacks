@@ -129,12 +129,15 @@ def main():
             df = db.fetch("tcbbo", f"{r.ticker}.OPT", s, e)
         except BudgetExceeded:
             return None
+        except Exception as exc:                      # network failure after retries: skip the day, count it
+            print(f"  {r.ticker} {r.date}: fetch failed ({type(exc).__name__}); excluded", flush=True)
+            return None
         if "symbol" not in df.columns:
             df = df.reset_index()
         return {"ticker": r.ticker, "date": r.date, "spike_ratio": r.spike_ratio,
                 "sampled_volume": r.sampled_volume, "quote_usd": r.quote_usd, **day_features(df)}
 
-    with ThreadPoolExecutor(8) as ex:
+    with ThreadPoolExecutor(4) as ex:
         rows = [x for x in ex.map(one, order) if x is not None]
     skipped = len(cand) - len(rows)
     if skipped:
