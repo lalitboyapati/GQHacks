@@ -68,7 +68,7 @@ def day_features(trades: pd.DataFrame) -> dict:
     return out
 
 
-def candidates() -> pd.DataFrame:
+def candidates(return_pool: bool = False) -> pd.DataFrame:
     """Stage-1 days sent to Databento: widest spike neighbour, contract floor, one-directional on volume, liquid,
     then a seeded random DATABENTO_SAMPLE_FRACTION of them (the same draw for in- and out-of-sample)."""
     s = pd.read_csv(config.DATA_DIR / "spike_days.csv")
@@ -84,6 +84,8 @@ def candidates() -> pd.DataFrame:
          & ((share >= config.STAGE1_CALL_SHARE_EXTREME) | (share <= 1 - config.STAGE1_CALL_SHARE_EXTREME))
          & (s.px >= config.LIQ_MIN_PRICE) & (s.dv20 >= config.LIQ_MIN_DOLLAR_VOLUME))
     pool = s[m].reset_index(drop=True)
+    if return_pool:
+        return pool
     rng = np.random.default_rng(config.DATABENTO_SAMPLE_SEED)
     keep = rng.random(len(pool)) < config.DATABENTO_SAMPLE_FRACTION
     print(f"stage-1 pool {len(pool)} name-days; random {config.DATABENTO_SAMPLE_FRACTION:.0%} sample keeps {int(keep.sum())}")
