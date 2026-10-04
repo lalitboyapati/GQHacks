@@ -32,6 +32,11 @@ OOS_LOCK = R / "OOS_LOCK.json"
 
 
 def log_variant(name: str, period: str, m: dict, spec: dict):
+    """Append a tested configuration, once: reproducing a logged run does not count as a new trial."""
+    if VARIANT_LOG.exists():
+        seen = pd.read_csv(VARIANT_LOG)
+        if ((seen.variant == name) & (seen.period == period)).any():
+            return
     row = {"logged_at": datetime.now(timezone.utc).isoformat(timespec="seconds"), "variant": name, "period": period,
            "spec": json.dumps(spec, sort_keys=True), **{k: m.get(k) for k in ("sharpe", "ann_return", "max_drawdown", "n_trades")}}
     pd.DataFrame([row]).to_csv(VARIANT_LOG, mode="a", header=not VARIANT_LOG.exists(), index=False)
@@ -140,6 +145,8 @@ def evaluate_period(label: str, start: str, end: str, whales: pd.DataFrame, news
     go("baseline", base_sig)
     go("baseline ×2 costs", base_sig, Params(cost_mult=2.0), {"cost_mult": 2})
     go("no XBI hedge", base_sig, Params(hedge=False), {"hedge": False})
+    go("no options tail hedge", base_sig, Params(tail_hedge=False), {"tail_hedge": False})
+    go("no hedges at all", base_sig, Params(hedge=False, tail_hedge=False), {"hedge": False, "tail_hedge": False})
     go("no news filter (trade every whale day)", make_signals(whales, news, news_rule="ignore"), spec={"news_rule": "ignore"})
     go("P2 shadow: only days the news already covered", make_signals(whales, news, news_rule="covered_same_only"),
        spec={"news_rule": "covered_same_only"})
@@ -186,6 +193,7 @@ def evaluate_period(label: str, start: str, end: str, whales: pd.DataFrame, news
     mt.to_csv(R / f"{label}_metrics.csv")
     base_res["trades"].to_csv(R / f"{label}_trades.csv", index=False)
     base_res["skipped"].to_csv(R / f"{label}_skipped.csv", index=False)
+    base_res["hedge_notes"].to_csv(R / f"{label}_tail_hedges.csv", index=False)
     base_res["equity"].rename("equity").to_csv(R / f"{label}_equity.csv")
     decay.to_csv(R / f"{label}_decay.csv", index=False)
     cap.to_csv(R / f"{label}_capacity.csv", index=False)
@@ -196,6 +204,11 @@ def evaluate_period(label: str, start: str, end: str, whales: pd.DataFrame, news
     summary = {
         "period": label, "start": start, "end": end, "spec_hash": spec_hash(),
         "baseline": base_m, "baseline_x2_costs": runs["baseline ×2 costs"][1], "no_hedge": runs["no XBI hedge"][1],
+        "no_tail_hedge": runs["no options tail hedge"][1], "no_hedges": runs["no hedges at all"][1],
+        "tail_hedge_coverage": (base_res["hedge_notes"].hedged.mean() if len(base_res["hedge_notes"]) else None),
+        "tail_hedge_median_premium_pct": (base_res["hedge_notes"].premium_pct_of_position.median() if len(base_res["hedge_notes"]) else None),
+        "worst_trades_with_vs_without_hedge": (base_res["trades"].nsmallest(5, "gross_return")[["ticker", "entry_date", "gross_return", "return_with_hedge"]]
+                                               .astype(str).to_dict("records") if len(base_res["trades"]) else []),
         "factor_regression": reg, "n_trials_this_period": n_trials, "deflated_sharpe_prob": dsr,
         "signals_in_period": len(sig_p), "news_status_counts": sig_p.news_status.value_counts().to_dict(),
         "webull_missing_symbols": sorted(missing),

@@ -18,6 +18,7 @@ import numpy as np
 import pandas as pd
 
 import config
+from hedging import TailHedge
 from sources import WebullBars
 
 
@@ -31,6 +32,7 @@ class Params:
     stop: float = config.STOP_LOSS
     derisk: float = config.DRAWDOWN_DERISK
     hedge: bool = config.HEDGE
+    tail_hedge: bool = config.TAIL_HEDGE
     cost_mult: float = 1.0
     cash: float = config.INITIAL_CASH
 
@@ -51,6 +53,7 @@ class WhaleStrategy(bt.Strategy):
         self.pending_exit = set()
         self.peak = self.P.cash
         self.equity, self.traded, self.trades, self.skipped = [], [], [], []
+        self.hedge_notes = []
 
     # backtrader only calls next() once every feed has a bar; names list at different times, so run early too.
     def prenext(self):
@@ -70,20 +73,41 @@ class WhaleStrategy(bt.Strategy):
         if name == self.p.hedge_name:
             return
         if name in self.open and self.open[name].get("entry_price") is None:
-            self.open[name]["entry_price"] = order.executed.price
-            self.open[name]["entry_date"] = order.data.datetime.date(0)
+            pos = self.open[name]
+            pos["entry_price"] = order.executed.price
+            pos["entry_date"] = order.data.datetime.date(0)
+            if self.P.tail_hedge:
+                h = TailHedge(name, pos["entry_date"], pos["direction"], order.executed.price, pos["shares"],
+                              config.TAIL_SPREAD * self.P.cost_mult)
+                if h.ok:
+                    self.broker.add_cash(-h.cost)
+                    pos["hedge"] = h
+                    self.traded.append((self._today(), h.cost))
+                self.hedge_notes.append({"ticker": name, "date": pos["entry_date"], "hedged": h.ok, "reason": h.reason,
+                                         "option": getattr(h, "option", None), "premium_pct_of_position":
+                                         (h.cost / (pos["shares"] * order.executed.price)) if h.ok else None})
         elif name in self.pending_exit:
             pos = self.open.pop(name)
             self.pending_exit.discard(name)
             ret = pos["direction"] * (order.executed.price / pos["entry_price"] - 1)
-            self.trades.append({**pos["meta"], "ticker": name, "direction": pos["direction"],
+            hedge_pnl = 0.0
+            h = pos.get("hedge")
+            if h is not None:
+                cash, _ = h.proceeds(order.data.datetime.date(0))
+                self.broker.add_cash(cash)
+                self.traded.append((self._today(), cash))
+                hedge_pnl = cash - h.cost
+            notional = pos["shares"] * pos["entry_price"]
+            self.trades.append({**pos["meta"], "hedge_pnl_pct": hedge_pnl / notional, "hedged": h is not None,
+                                "return_with_hedge": ret + hedge_pnl / notional,
+                                "ticker": name, "direction": pos["direction"],
                                 "entry_date": pos["entry_date"], "entry_price": pos["entry_price"],
                                 "exit_date": order.data.datetime.date(0), "exit_price": order.executed.price,
                                 "shares": pos["shares"], "gross_return": ret, "exit_reason": pos.get("reason", "hold")})
 
     def next(self):
         today = self._today()
-        value = self.broker.getvalue()
+        value = self.broker.getvalue() + sum(p["hedge"].mark(today) for p in self.open.values() if p.get("hedge"))
         self.peak = max(self.peak, value)
         self.equity.append((today, value))
 
@@ -203,4 +227,5 @@ def run(signals: pd.DataFrame, start: str, end: str, P: Params | None = None, ba
     eq = eq[(eq.index >= pd.Timestamp(start)) & (eq.index <= pd.Timestamp(end) + pd.Timedelta(days=30))]
     traded = pd.DataFrame(strat.traded, columns=["date", "notional"])
     return {"equity": eq, "trades": pd.DataFrame(strat.trades), "skipped": pd.DataFrame(strat.skipped),
+            "hedge_notes": pd.DataFrame(strat.hedge_notes),
             "traded": traded, "missing": missing, "n_signals": len(sig), "params": P}

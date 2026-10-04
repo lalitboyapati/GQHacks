@@ -1,5 +1,10 @@
 # Gator Quant Hacks (GQHacks)
 
+> **Systematic Trading track submission:** [`tracks/whale_footprints/`](./tracks/whale_footprints/), biotech whale
+> option flow traded before the news. Hypothesis committed first ([`HYPOTHESIS.md`](./tracks/whale_footprints/HYPOTHESIS.md));
+> one command reproduces the headline numbers: `cd tracks/whale_footprints && python run_all.py --from-signals`
+> (setup and keys in its [README](./tracks/whale_footprints/README.md)).
+
 Multi-person workspace for **Form 8-K event strategies** with shared
 infrastructure and one folder per research track.
 
