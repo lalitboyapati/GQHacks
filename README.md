@@ -1,83 +1,74 @@
-# Gator Quant Hacks (GQHacks)
+# Whale Watching
 
-> **Systematic Trading track submission:** [`tracks/whale_footprints/`](./tracks/whale_footprints/), biotech whale
-> option flow traded before the news. Hypothesis committed first ([`HYPOTHESIS.md`](./tracks/whale_footprints/HYPOTHESIS.md));
-> one command reproduces the headline numbers: `cd tracks/whale_footprints && python run_all.py --from-signals`
-> (setup and keys in its [README](./tracks/whale_footprints/README.md)).
+> 🥇 **1st place, Databento track, Gator Quant Hacks (University of Florida Quant Hackathon).**
 
-Multi-person workspace for **Form 8-K event strategies** with shared
-infrastructure and one folder per research track.
+Two event-driven equity/options research projects, each pre-registered, tested on a locked
+out-of-sample window and fully reproducible from committed data:
 
-## Where things landed
+| Project | Question | Data | Write-up |
+|---|---|---|---|
+| [**Whale footprints**](whale_footprints/) | Do large one-sided option trades ("whales") in a biotech name predict the stock's move *before* the news covers it? | Databento OPRA, Massive, Webull | [`quant_note.pdf`](whale_footprints/docs/quant_note.pdf) |
+| [**8-K event trading**](8k_event_trading/) | Does the text of a biotech clinical-trial 8-K, read by a language model, predict the stock after the filing, and how cheaply can the trade be hedged with options? | Massive, SEC EDGAR, Jev (TypeSafe) | [`WRITEUP.pdf`](8k_event_trading/WRITEUP.pdf) |
 
-- **`8kadv-test`** (merged to `main` via PR #3) now lives in the multi-track
-  layout: shared library at
-  [`infrastructure/eightk/`](./infrastructure/eightk/), research track at
-  [`tracks/disclosure_advantage/`](./tracks/disclosure_advantage/)
-  (`exec_put`, `efficiency_collar`, `novelty_shortvol`, `combo`).
-- **Other strategies** are under [`tracks/`](./tracks/) — one folder per 8-K
-  focus (e.g. [`item_202_results_ops`](./tracks/item_202_results_ops/) for
-  Item 2.02 synthetic calls/puts). Overview stubs such as
-  `item_502_officer_changes` and `item_205_restructuring` point at the live
-  eightk strategies above. See [`tracks/README.md`](./tracks/README.md).
+## Headline results
 
-## Layout
+**Whale footprints** (net of costs; in-sample 2024-01 → 2026-03, out-of-sample 2026-03 → 2026-10, run once):
+
+| | In-sample Sharpe | Out-of-sample Sharpe |
+|---|---|---|
+| Locked plan (with options tail hedge) | −0.56 | −0.76 |
+| No options tail hedge | −0.14 | +0.70 |
+| No hedges at all | −0.07 | +1.46 |
+
+The whale signal itself carries information: the direction-signed 5-session stock move is **+1.06%** in-sample
+(n = 593) and **+2.54%** out-of-sample (n = 173). The pre-registered plan loses because the options tail hedge costs
+more than the edge (biotech implied volatility is extreme before catalysts). The hedge-free variants are reported,
+not adopted, since choosing them after seeing the out-of-sample run would be tuning on the test set.
+Details: [`whale_footprints/README.md`](whale_footprints/README.md).
+
+**8-K event trading:** the language model reads trial readouts well (its sentiment lines up monotonically with the
+day-0 move), but by the close of the filing session the move is done; the under-reaction rule shows no edge over
+placebo in- or out-of-sample. The option side does hold: implied volatility collapses after the readout, so
+post-event protection is far cheaper and roughly halves the worst decile of the long book.
+Details: [`8k_event_trading/README.md`](8k_event_trading/README.md).
+
+## Repository layout
 
 ```
-GQHacks/
-├── infrastructure/          # Shared engines (do not fork per person)
-│   ├── webull_bt/           # Webull + Backtrader feeds, broker, reports
-│   ├── eightk/              # EDGAR/Massive event-study + options book
-│   ├── backtest/            # Common Backtrader runner + shared .env
-│   ├── live/
-│   └── examples/strategies/ # Reference demos (dual_ma, portfolio)
-├── tracks/                  # One folder per researcher / 8-K topic
-│   ├── _template/
-│   ├── item_202_results_ops/       # Item 2.02 → synthetic calls/puts (Backtrader)
-│   ├── disclosure_advantage/       # 5.02 / 2.05-2.06 / novelty event-study
-│   ├── physical_facility_disruption/ # disruption 8-K × FIRMS → CSP (Backtrader)
-│   ├── item_502_officer_changes/   # overview → exec_put strategy
-│   ├── item_205_restructuring/     # overview → efficiency collar
-│   └── …
-└── run.py                   # CLI for Backtrader tracks (+ helpers)
+whale_watching/
+├── whale_footprints/              # options-flow strategy (Databento + Massive + Webull)
+│   ├── README.md                  # results, pipeline, how to reproduce
+│   ├── run_all.py                 # one entry point: data stages → backtests → every variant
+│   ├── pipeline/                  # universe → screen → whales → signals → backtest (+ hedging, analysis)
+│   ├── reporting/                 # diagnostics and figures for the quant note
+│   ├── docs/                      # HYPOTHESIS.md (pre-registration), DEVIATIONS.md, quant_note.pdf
+│   ├── data/                      # committed derived tables (raw vendor cache is gitignored)
+│   ├── results/                   # metrics, equity curves, trades, OOS lock, variants log
+│   └── figures/                   # figures used in the quant note
+│
+└── 8k_event_trading/              # 8-K filing strategies (Massive + EDGAR + Jev)
+    ├── README.md
+    ├── biotech-strategy-notebook.ipynb   # main study: biotech clinical-trial 8-Ks
+    ├── WRITEUP.pdf                       # two-page write-up of the biotech study
+    ├── jev_cache/                        # committed LLM labels, so the notebook runs without a Jev key
+    ├── figures/
+    └── facility_disruption/              # exploratory: facility-disruption 8-Ks × NASA FIRMS satellite heat data
 ```
-
-Each **track** owns:
-- `STRATEGY.md` — thesis and approach (the overall view)
-- `strategy.py` — Backtrader `STRATEGY_CLASS` **or** a stub that points at the event-study runner
-- optional `scripts/`, `data/`, `tests/`, track-local `.env`
-
-## Webull backtesting
-
-See [WEBULL_BACKTEST.md](./WEBULL_BACKTEST.md) for account setup, commands for both
-active engines, cached replay, and the distinction between Webull stock history
-and modeled options. Real-data execution requires your Webull OpenAPI credentials.
 
 ## Quickstart
 
 ```bash
-cd infrastructure
-uv sync
-cp backtest/.env.example backtest/.env   # WEBULL_* + MASSIVE_APP_KEY
+# Whale footprints (Python 3.11+): reproduce the headline numbers from committed signals
+cd whale_footprints
+python -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env               # add Webull + Massive keys
+python run_all.py --from-signals   # in-sample;  add --oos for the locked out-of-sample run
 
-cd ..
-python run.py --list-tracks
-
-# Backtrader track (Item 2.02)
-python run.py --track item_202_results_ops
-
-# Event-study track (8-K disclosure advantage — from former gqh-8k-options-research / 8kadv-test)
-python tracks/disclosure_advantage/scripts/fetch_events.py
-python tracks/disclosure_advantage/scripts/run_backtest.py
-# or:
-python run.py --track disclosure_advantage --engine event
+# 8-K event trading (Python 3.10+)
+cd ../8k_event_trading
+./setup.sh                         # creates .venv, registers a Jupyter kernel, creates .env
+# add MASSIVE_API_KEY to .env, then open biotech-strategy-notebook.ipynb and run all cells
 ```
 
-## Adding a new 8-K track
-
-1. Copy `tracks/_template` → `tracks/<your_track_name>`
-2. Fill in `STRATEGY.md`
-3. Implement `strategy.py` **or** add `scripts/` that use `infrastructure/eightk`
-4. Run via `run.py --track …` (Backtrader) or the track’s scripts (event-study)
-
-See [`tracks/README.md`](./tracks/README.md).
+API keys live in per-project `.env` files, which are gitignored.
